@@ -1,6 +1,6 @@
 package Text::RecordParser;
 
-# $Id: RecordParser.pm,v 1.5 2003/06/27 21:48:09 kclark Exp $
+# $Id: RecordParser.pm,v 1.8 2003/11/05 18:28:40 kclark Exp $
 
 =head1 NAME
 
@@ -17,6 +17,9 @@ Text::RecordParser - read record-oriented files
 
   # Split fields on tabs
   $p->field_separator("\t");
+
+  # Skip lines beginning with hashes
+  $p->comment( qr/^#/ );
 
   # Use the fields in the first line as column names
   $p->bind_header;
@@ -68,7 +71,7 @@ use Text::ParseWords 'parse_line';
 use IO::Scalar;
 
 use vars '$VERSION';
-$VERSION = 0.03;
+$VERSION = 0.04;
 
 # ----------------------------------------------------------------
 sub new {
@@ -88,9 +91,14 @@ The path to the file being read.  If the filename is passed and the fh
 is not, then it will open a filehandle on that file and sets C<fh>
 accordingly.  
 
+=item * comment
+
+A compiled regular expression identifying comment lines that should 
+be skipped.
+
 =item * data
 
-The data to read
+The data to read.
 
 =item * fh
 
@@ -131,7 +139,7 @@ treated as the C<filename> argument.
     my $data_handles = 0;
     for my $arg ( 
         qw[ filename fh header_filter field_filter 
-            field_separator record_separator data
+            field_separator record_separator data comment
         ] 
     ) {
         next unless $args->{ $arg };
@@ -155,8 +163,11 @@ sub bind_fields {
 
 =head2 bind_fields
 
-Takes an array of field names and memorizes the field positions for 
-later use.
+Takes an array of field names and memorizes the field positions for
+later use.  If the input file has no header line but you still wish to
+retrieve the fields by name (or even if you want to call
+C<bind_header> and then give your own field names), simply pass in the
+an array of field names you wish to use.
 
   $p->bind_fields( qw[ name rank serial_number ] );
 
@@ -206,6 +217,32 @@ opening the file in order to bind the field names in the first row.
     $self->bind_fields( @columns );
 
     return 1;
+}
+
+# ----------------------------------------------------------------
+sub comment {
+
+=pod
+
+=head2 comment
+
+Takes a regex to apply to a record to see if it looks like a comment
+to skip.
+
+  $p->comment( qr/^#/ );  # Perl-style comments
+  $p->comment( qr/^--/ ); # SQL-style comments
+
+=cut
+
+    my $self = shift;
+
+    if ( my $arg = shift ) {
+        croak "Argument to comment doesn't look like a regex"
+            unless ref $arg eq 'Regexp';
+        $self->{'comment'} = $arg;
+    }
+
+    return $self->{'comment'} || '';
 }
 
 # ----------------------------------------------------------------
@@ -316,13 +353,21 @@ of the fields.
 
 =cut
 
-    my $self = shift;
-    my $fh   = $self->fh;
-    local $/ = $self->record_separator;
-    defined( my $line = <$fh> ) or return;
-    chomp( $line );
+    my $self    = shift;
+    my $fh      = $self->fh;
+    my $comment = $self->comment;
+    local $/    = $self->record_separator;
 
-    my @fields = parse_line( $self->field_separator, 1, $line );
+    my $line;
+    for ( ;; ) {
+        defined( $line = <$fh> ) or return;
+        chomp( $line );
+        next if $comment && $line =~ $comment;
+        last if $line;
+    }
+
+    my @fields = parse_line( $self->field_separator, 1, $line )
+        or croak("Error reading line '$line'");
 
     if ( my $filter = $self->field_filter ) {
         @fields = map { $filter->( $_ ) } @fields;
@@ -784,7 +829,7 @@ Set the record and field separators like so:
 
 =head1 AUTHOR
 
-Ken Y. Clark E<lt>kclark@cshl.orgE<gt>
+Ken Y. Clark E<lt>kclark@cpan.orgE<gt>
 
 =head1 COPYRIGHT
 

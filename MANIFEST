@@ -12,7 +12,11 @@ t/05-fetch.t
 t/06-filter.t
 t/07-parse.t
 t/08-compute.t
+t/09-comment.t
+t/data/commented.dat
+t/data/commented2.dat
 t/data/numbers.csv
 t/data/simpsons.alt
 t/data/simpsons.csv
 t/data/simpsons.tab
+META.yml                                Module meta-data (added by MakeMaker)

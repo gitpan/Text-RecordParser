@@ -12,6 +12,9 @@ SYNOPSIS
       # Split fields on tabs
       $p->field_separator("\t");
 
+      # Skip lines beginning with hashes
+      $p->comment( qr/^#/ );
+
       # Use the fields in the first line as column names
       $p->bind_header;
 
@@ -61,8 +64,12 @@ METHODS
         fh is not, then it will open a filehandle on that file and sets "fh"
         accordingly.
 
+    * comment
+        A compiled regular expression identifying comment lines that should
+        be skipped.
+
     * data
-        The data to read
+        The data to read.
 
     * fh
         The filehandle of the file to read.
@@ -86,7 +93,10 @@ METHODS
 
   bind_fields
     Takes an array of field names and memorizes the field positions for
-    later use.
+    later use. If the input file has no header line but you still wish to
+    retrieve the fields by name (or even if you want to call "bind_header"
+    and then give your own field names), simply pass in the an array of
+    field names you wish to use.
 
       $p->bind_fields( qw[ name rank serial_number ] );
 
@@ -97,6 +107,13 @@ METHODS
 
       $p->bind_header;
       my $name = $p->extract('name');
+
+  comment
+    Takes a regex to apply to a record to see if it looks like a comment to
+    skip.
+
+      $p->comment( qr/^#/ );  # Perl-style comments
+      $p->comment( qr/^--/ ); # SQL-style comments
 
   data
     Allows a scalar, scalar reference, glob, array, or array reference as
@@ -284,7 +301,7 @@ METHODS
       $p->field_separator("\n");
 
 AUTHOR
-    Ken Y. Clark <kclark@cshl.org>
+    Ken Y. Clark <kclark@cpan.org>
 
 COPYRIGHT
     Copyright (c) 2003 Ken Y. Clark

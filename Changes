@@ -2,7 +2,7 @@
     
 -   Created initial version
 
-0.02    May  6 2003
+0.02    May 6 2003
 
 -   Added "data" method to allow reading of data from a scalar
 -   Allow "fetchall_hashref" to use a computed field for the key
@@ -11,3 +11,10 @@
 
 -   Cleaned up "extract" a bit
 -   Allow "new" to accept a single argument and treat as "filename"
+
+0.04    November 5 2003
+
+-   Added "comment" method to identify lines which should be skipped
+    as comments
+-   Altered "fetchrow_array" to croak if it reads a line but can't parse
+    it into fields, also changed to skip empty lines automatically
