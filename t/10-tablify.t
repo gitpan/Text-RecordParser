@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 
 use strict;
-use Config;
 use FindBin '$Bin';
 use Test::More tests => 10;
 
@@ -105,21 +104,20 @@ my @tests = (
     name     => 'No headers plus filtering by position',
     command  => "$tablify --fs ',' --no-headers -w '3 eq \"General\"' $nh_data",
     expected => 
-'+--------+--------+---------+--------+--------+
-| Field1 | Field2 | Field3  | Field4 | Field5 |
-+--------+--------+---------+--------+--------+
-| 64     | George | General | 190293 | 0      |
-| 75     | Dwight | General | 908348 | 0      |
-| 54     | Tommy  | General | 998110 | 1      |
-+--------+--------+---------+--------+--------+
+'+--------+---------+--------+--------+--------+
+| Field1 | Field2  | Field3 | Field4 | Field5 |
++--------+---------+--------+--------+--------+
+| George | General | 190293 | 0      | 64     |
+| Dwight | General | 908348 | 0      | 75     |
+| Tommy  | General | 998110 | 1      | 54     |
++--------+---------+--------+--------+--------+
 3 records returned
 '
 },
 );
 
-my $perl = $Config{'perlpath'};
 for my $test ( @tests ) {
-    my $out = `$perl $test->{'command'}`;
+    my $out = `$test->{'command'}`;
     is( $out, $test->{'expected'}, $test->{'name'} || 'Parsing' );
 }
 

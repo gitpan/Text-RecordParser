@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+# $Id: tablify,v 1.5 2004/11/16 01:55:49 kclark Exp $
+
 =head1 NAME
 
 tablify - turn a delimited text file into a text table
@@ -139,13 +141,13 @@ When dealing with data lacking field names, you can specify "no-headers"
 and then refer to fields by number (starting at one), e.g.:
 
   $ tail -5 people.dat | tablify --fs ',' --no-headers -w '3 eq "General"' -
-  +--------+--------+---------+--------+--------+
-  | Field1 | Field2 | Field3  | Field4 | Field5 |
-  +--------+--------+---------+--------+--------+
-  | 64     | George | General | 190293 | 0      |
-  | 75     | Dwight | General | 908348 | 0      |
-  | 54     | Tommy  | General | 998110 | 1      |
-  +--------+--------+---------+--------+--------+
+  +--------+---------+--------+--------+--------+
+  | Field1 | Field2  | Field3 | Field4 | Field5 |
+  +--------+---------+--------+--------+--------+
+  | George | General | 190293 | 0      | 64     |
+  | Dwight | General | 908348 | 0      | 75     |
+  | Tommy  | General | 998110 | 1      | 54     |
+  +--------+---------+--------+--------+--------+
   3 records returned
 
 =cut
@@ -241,13 +243,7 @@ if ( $show_fields ) {
     }
 }
 
-my $tab = Text::TabularDisplay->new( 
-    $no_headers 
-        ? ()
-        : @fields 
-            ? @fields 
-            : map { "Field$_" } @fields 
-);
+my $tab = Text::TabularDisplay->new( @fields );
 
 my $i;
 if ( $no_headers ) {
@@ -257,12 +253,14 @@ if ( $no_headers ) {
             @fields = ( 0..$#data );
             $tab->columns( map { "Field" . ($_+1) } @fields );
         }
+
         for my $field ( keys %where ) {
             my ( $op, $value ) = @{ $where{ $field } };
             my $cmd = "'$data[ ($field - 1) ]' $op $value";
             next RECORD unless eval $cmd;
         }
-        $tab->add( map { $data[ $_ - 1] } @fields );
+
+        $tab->add( map { $data[ $_ ] } @fields );
         $i++;
         last if $limit && $i > $limit;
     }
@@ -275,6 +273,7 @@ else {
             my $cmd = "'$data->{ $field }' $op $value";
             next RECORD unless eval $cmd;
         }
+
         $tab->add( map { $data->{ $_ } } @fields );
         $i++;
         last if $limit && $i > $limit;
@@ -310,7 +309,7 @@ close $fh;
 
 =item * DBD::CSV
 
-Although I don't use this module, the idea was much the inspiration 
+Although I don't DBD::CSV this module, the idea was much the inspiration 
 for this.  I just didn't want to have to install DBI and DBD::CSV to
 get this kind of functionality.  I think my interface is simpler.
 
@@ -318,7 +317,7 @@ get this kind of functionality.  I think my interface is simpler.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2004 Ken Y. Clark
+Copyright (C) 2004 Ken Youens-Clark
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -331,6 +330,6 @@ General Public License for more details.
 
 =head1 AUTHOR
 
-Ken Y. Clark E<lt>kclark@cshl.orgE<gt>.
+Ken Youens-Clark E<lt>kclark@cpan.orgE<gt>.
 
 =cut

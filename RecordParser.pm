@@ -1,6 +1,6 @@
 package Text::RecordParser;
 
-# $Id: RecordParser.pm,v 1.11 2004/04/20 21:01:47 kclark Exp $
+# $Id: RecordParser.pm,v 1.15 2004/11/16 19:46:18 kclark Exp $
 
 =head1 NAME
 
@@ -67,11 +67,11 @@ methods to get at the data as arrays or hashes.
 
 use strict;
 use Carp 'croak';
-use Text::ParseWords 'parse_line';
+use Text::ParseWords qw[ parse_line ];
 use IO::Scalar;
 
 use vars '$VERSION';
-$VERSION = 0.07;
+$VERSION = 0.08;
 
 # ----------------------------------------------------------------
 sub new {
@@ -868,7 +868,7 @@ Remove leading and trailing whitespace from fields.
 
 =head1 AUTHOR
 
-Ken Y. Clark E<lt>kclark@cpan.orgE<gt>.
+Ken Youens-Clark E<lt>kclark@cpan.orgE<gt>
 
 =head1 CREDITS
 
@@ -888,11 +888,15 @@ For DBI, from which many of the methods were shamelessly stolen
 
 For contributing code to make it easy to parse whitespace-delimited data
 
+=item * Liya Ren
+
+For catching the column-ordering error when parsing with "no-headers"
+
 =back
 
 =head1 COPYRIGHT
 
-Copyright (c) 2003-4 Ken Y. Clark
+Copyright (c) 2004 Ken Youens-Clark
 
 This library is free software;  you can redistribute it and/or modify
 it under the same terms as Perl itself.
@@ -900,5 +904,9 @@ it under the same terms as Perl itself.
 =head1 BUGS
 
 None known.  Please use http://rt.cpan.org/ for reporting bugs.
+
+The tests that use Text::TabularDisplay (10-tablify.t and 11-tabmerge.t)
+are known to fail with version 1.20 of that module.  A patch has been sent
+to the author of T::TD.
 
 =cut

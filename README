@@ -310,7 +310,7 @@ METHODS
       my $trim_value = $p->trim(1);
 
 AUTHOR
-    Ken Y. Clark <kclark@cpan.org>
+    Ken Youens-Clark <kclark@cpan.org>
 
 CREDITS
     Thanks to the following:
@@ -325,12 +325,20 @@ CREDITS
         For contributing code to make it easy to parse whitespace-delimited
         data
 
+    * Liya Ren
+        For catching the column-ordering error when parsing with
+        "no-headers"
+
 COPYRIGHT
-    Copyright (c) 2003-4 Ken Y. Clark
+    Copyright (c) 2004 Ken Youens-Clark
 
     This library is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.
 
 BUGS
-    Please use http://rt.cpan.org/ for reporting bugs.
+    None known. Please use http://rt.cpan.org/ for reporting bugs.
+
+    The tests that use Text::TabularDisplay (10-tablify.t and 11-tabmerge.t)
+    are known to fail with version 1.20 of that module. A patch has been
+    sent to the author of T::TD.
 

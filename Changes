@@ -1,3 +1,12 @@
+0.08    November 16 2004
+
+-   Added "tabmerge" script
+-   Fixed bug in "no-headers" parsing that reordered fields
+
+0.07    September 3 2004
+
+-   Bug fixes to whitespace parsing
+
 0.06    April 6 2004
 
 -   Added ability to split on whitespace by adding support for regexes 
@@ -6,6 +15,7 @@
     whitespace from fields (to better support parsing of 
     whitespace-separated data)
 -   Improved test suites to run outside of traditional "make test"
+-   Added "tablify" script
 
 0.05    December 16 2003
 
