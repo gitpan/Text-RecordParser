@@ -1,6 +1,6 @@
 package Text::RecordParser;
 
-# $Id: RecordParser.pm,v 1.8 2003/11/05 18:28:40 kclark Exp $
+# $Id: RecordParser.pm,v 1.9 2003/12/16 20:43:05 kclark Exp $
 
 =head1 NAME
 
@@ -71,7 +71,7 @@ use Text::ParseWords 'parse_line';
 use IO::Scalar;
 
 use vars '$VERSION';
-$VERSION = 0.04;
+$VERSION = 0.05;
 
 # ----------------------------------------------------------------
 sub new {
@@ -359,15 +359,17 @@ of the fields.
     local $/    = $self->record_separator;
 
     my $line;
+    my $line_no = 0;
     for ( ;; ) {
+        $line_no++;
         defined( $line = <$fh> ) or return;
         chomp( $line );
         next if $comment && $line =~ $comment;
         last if $line;
     }
 
-    my @fields = parse_line( $self->field_separator, 1, $line )
-        or croak("Error reading line '$line'");
+    my @fields = parse_line( quotemeta $self->field_separator, 1, $line )
+        or croak("Error reading line number $line_no:\n'$line'");
 
     if ( my $filter = $self->field_filter ) {
         @fields = map { $filter->( $_ ) } @fields;

@@ -16,6 +16,7 @@ t/09-comment.t
 t/data/commented.dat
 t/data/commented2.dat
 t/data/numbers.csv
+t/data/pipe.dat
 t/data/simpsons.alt
 t/data/simpsons.csv
 t/data/simpsons.tab

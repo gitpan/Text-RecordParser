@@ -18,3 +18,8 @@
     as comments
 -   Altered "fetchrow_array" to croak if it reads a line but can't parse
     it into fields, also changed to skip empty lines automatically
+
+0.05    December 16 2003
+
+-   Added "quotemeta" to field separator argument to "parse_line" to fix
+    error reported by Olaf Weinert

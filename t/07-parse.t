@@ -5,7 +5,7 @@
 #
 
 use strict;
-use Test::More tests => 2;
+use Test::More tests => 4;
 use Text::RecordParser;
 
 {
@@ -26,5 +26,15 @@ use Text::RecordParser;
     );
     $p->bind_header;
     my $row = $p->fetchrow_hashref;
-    is( $row->{'Wife'}, 'Marge', "Wife is stile Marge" );
+    is( $row->{'Wife'}, 'Marge', "Wife is still Marge" );
+}
+
+{
+    my $p = Text::RecordParser->new(
+        filename         => 't/data/pipe.dat',
+        field_separator  => '|',
+    );
+    my $row = $p->fetchrow_array;
+    is( $row->[0], 'MSH', "First field is 'MSH'" );
+    is( $row->[-1], '2.2', "Last field is '2.2'" );
 }
