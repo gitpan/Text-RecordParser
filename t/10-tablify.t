@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
+use Config;
 use FindBin '$Bin';
 use Test::More tests => 10;
 
@@ -116,8 +117,9 @@ my @tests = (
 },
 );
 
+my $perl = $Config{'perlpath'};
 for my $test ( @tests ) {
-    my $out = `$test->{'command'}`;
+    my $out = `$perl $test->{'command'}`;
     is( $out, $test->{'expected'}, $test->{'name'} || 'Parsing' );
 }
 

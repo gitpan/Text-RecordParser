@@ -71,7 +71,7 @@ use Text::ParseWords 'parse_line';
 use IO::Scalar;
 
 use vars '$VERSION';
-$VERSION = 0.06;
+$VERSION = 0.07;
 
 # ----------------------------------------------------------------
 sub new {
