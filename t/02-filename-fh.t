@@ -8,16 +8,17 @@ use strict;
 use IO::File;
 use Test::More tests => 31;
 use Text::RecordParser;
+use FindBin '$Bin';
 
 {
     my $p = Text::RecordParser->new;
 
     is( $p->filename, '', "Filename is blank" );
 
-    my $file = 't/data/simpsons.csv';
+    my $file = "$Bin/data/simpsons.csv";
     is( $p->filename($file), $file, "Filename is '$file'" );
 
-    my $dir = 't/data';
+    my $dir = "$Bin/data";
     eval {
         $p->filename($dir);
     };
@@ -25,7 +26,7 @@ use Text::RecordParser;
 
     like($err, qr/cannot use dir/i, "filename rejects directory for argument");
 
-    my $bad_file = 't/data/non-existent';
+    my $bad_file = "$Bin/data/non-existent";
     eval {
         $p->filename($bad_file);
     };
@@ -39,14 +40,14 @@ use Text::RecordParser;
 {
     my $p = Text::RecordParser->new;
 
-    open my $fh, '<t/data/simpsons.cvs';
+    open my $fh, "<$Bin/data/simpsons.cvs";
     is ( ref $p->fh( $fh ), 'GLOB', 'fh is a filehandle' );
 
     #
     # Cause an error by closing the existing fh.
     #
     close $fh;
-    open my $fh2, '<t/data/simpsons.tab';
+    open my $fh2, "<$Bin/data/simpsons.tab";
     eval { $p->fh( $fh2 ) };
     my $err = $@;
     like ( $err, qr/can't close existing/i, 'fh catches bad close' );
@@ -55,7 +56,7 @@ use Text::RecordParser;
     $err = $@;
     like ( $err, qr/doesn't look like a filehandle/i, 'fh catches bad arg' );
 
-    my $io = IO::File->new('<t/data/simpsons.cvs');
+    my $io = IO::File->new("<$Bin/data/simpsons.cvs");
     is ( ref $p->fh( $io ), 'GLOB', 'fh is a filehandle' );
 }
 
@@ -103,7 +104,8 @@ use Text::RecordParser;
     is( $rec->{'name'}, 'Art Blakey', 'name = "Art Blakey"' );
     is( $rec->{'instrument'}, 'drums', 'instrument = "drums"' );
 
-    open my $fh, '<t/data/simpsons.cvs';
+    my $filename = "$Bin/data/simpsons.csv";
+    open my $fh, "<$filename" or die "Can't read '$filename': $!";
     is ( $p->data( $fh ), 1, 'data accepts a filehandle' );
     is ( UNIVERSAL::isa( $p->fh, 'GLOB' ), 1, 'fh is a GLOB' );
 }

@@ -7,6 +7,7 @@
 use strict;
 use Test::More tests => 13;
 use Text::RecordParser;
+use FindBin '$Bin';
 
 {
     my $p = Text::RecordParser->new;
@@ -39,12 +40,12 @@ use Text::RecordParser;
 
     $p->header_filter( sub { lc shift } );
     $p->field_filter( sub { uc shift } );
-    $p->filename('t/data/simpsons.csv');
+    $p->filename("$Bin/data/simpsons.csv");
     $p->bind_header;
     my @fields = $p->field_list;
     is( $fields[0], 'name', 'Field "name"' );
     is( $fields[2], 'city', 'Field "city"' );
-    is( $fields[-1], 'children', 'Field "children"' );
+    is( $fields[-1], 'dependents', 'Field "dependents"' );
 
     my @row = $p->fetchrow_array;
     is( $row[2], 'SPRINGFIELD', 'City is "SPRINGFIELD"' );

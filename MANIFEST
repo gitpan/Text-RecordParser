@@ -1,9 +1,12 @@
 Changes
+INSTALL
 MANIFEST
 MANIFEST.SKIP
 Makefile.PL
 README
 RecordParser.pm
+TODO
+bin/tablify
 t/01-new.t
 t/02-filename-fh.t
 t/03-separator.t
@@ -13,11 +16,15 @@ t/06-filter.t
 t/07-parse.t
 t/08-compute.t
 t/09-comment.t
+t/10-tablify.t
 t/data/commented.dat
 t/data/commented2.dat
 t/data/numbers.csv
 t/data/pipe.dat
+t/data/people.dat
+t/data/people-no-header.dat
 t/data/simpsons.alt
 t/data/simpsons.csv
 t/data/simpsons.tab
+t/data/simpsons.ssv
 META.yml                                Module meta-data (added by MakeMaker)

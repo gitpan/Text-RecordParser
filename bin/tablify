@@ -1,0 +1,336 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+tablify - turn a delimited text file into a text table
+
+=head1 SYNOPSIS
+
+  tablify [options] file
+
+Options:
+
+  -h|--help           Show help
+  --no-headers        Assume first line is data, not headers
+  -l|--list           List the fields in the file (for use with -f)
+  -f|--fields=f1[,f2] Show only fields in comma-separated list;
+                      when used in conjunction with "no-headers"
+                      the list should be field numbers (starting at 1);
+                      otherwise, should be field names
+  -w|where=f<cmp>v    Apply the "cmp" Perl operator to restrict output 
+                      where field "f" matches the value "v";  acceptable
+                      operators include ==, eq, >, >=, <=, and =~
+  --limit=n           Limit to first "n" records
+  --fs=x              Use "x" as the field separator 
+                      (default is tab "\t")
+  --rs=x              Use "x" as the record separator 
+                      (default is newline "\n")
+
+=head1 DESCRIPTION
+
+This script is essentially a quick way to parse a delimited text file
+and view it as a nice ASCII table.  By selecting only certain B<fields>,
+employing a B<where> clause to only select records where a field matches
+some value, and using the B<limit> to only see some of the output, you 
+almost have a mini-database front-end for a simple text file.
+
+=head1 EXAMPLES
+
+Given a data file like this:
+
+  name,rank,serial_no,is_living,age
+  George,General,190293,0,64
+  Dwight,General,908348,0,75
+  Attila,Hun,,0,56
+  Tojo,Emporor,,0,87
+  Tommy,General,998110,1,54
+
+To find the fields you can reference, use the B<list> option:
+
+  $ tablify --fs ',' -l people.dat 
+  +-----------+-----------+
+  | Field No. | Field     |
+  +-----------+-----------+
+  | 1         | name      |
+  | 2         | rank      |
+  | 3         | serial_no |
+  | 4         | is_living |
+  | 5         | age       |
+  +-----------+-----------+
+
+To extract just the name and serial numbers, use the B<fields> option:
+
+  $ tablify --fs ',' -f name,serial_no people.dat 
+  +--------+-----------+
+  | name   | serial_no |
+  +--------+-----------+
+  | George | 190293    |
+  | Dwight | 908348    |
+  | Attila |           |
+  | Tojo   |           |
+  | Tommy  | 998110    |
+  +--------+-----------+
+  5 records returned
+
+To extract the first through third fields and the fifth field (where
+field numbers start at "1" -- tip: use the B<list> option to quickly 
+determine field numbers), use this syntax for B<fields>:
+
+  $ tablify --fs ',' -f 1-3,5 people.dat 
+  +--------+---------+-----------+------+
+  | name   | rank    | serial_no | age  |
+  +--------+---------+-----------+------+
+  | George | General | 190293    | 64   |
+  | Dwight | General | 908348    | 75   |
+  | Attila | Hun     |           | 56   |
+  | Tojo   | Emporor |           | 87   |
+  | Tommy  | General | 998110    | 54   |
+  +--------+---------+-----------+------+
+  5 records returned
+
+To select only the ones with six serial numbers, use a B<where> 
+clause:
+
+  $ tablify --fs ',' -w 'serial_no=~/^\d{6}$/' people.dat
+  +--------+---------+-----------+-----------+------+
+  | name   | rank    | serial_no | is_living | age  |
+  +--------+---------+-----------+-----------+------+
+  | George | General | 190293    | 0         | 64   |
+  | Dwight | General | 908348    | 0         | 75   |
+  | Tommy  | General | 998110    | 1         | 54   |
+  +--------+---------+-----------+-----------+------+
+  3 records returned
+
+To find Dwight's record, you would do this:
+
+  $ tablify --fs ',' -w 'name eq "Dwight"' people.dat
+  +--------+---------+-----------+-----------+------+
+  | name   | rank    | serial_no | is_living | age  |
+  +--------+---------+-----------+-----------+------+
+  | Dwight | General | 908348    | 0         | 75   |
+  +--------+---------+-----------+-----------+------+
+  1 record returned
+
+To find the name of all the people with a serial number who are living:
+
+  $ tablify --fs ',' -f name -w 'is_living==1' -w 'serial_no>0' people.dat 
+  +-------+
+  | name  |
+  +-------+
+  | Tommy |
+  +-------+
+  1 record returned
+
+To filter outside of program and simply format the results, use "-" as
+the last argument to force reading of STDIN (and probably assume no 
+headers):
+
+  $ grep General people.dat | tablify --fs ',' -f 1-3 --no-headers -
+  +---------+--------+--------+
+  | Field1  | Field2 | Field3 |
+  +---------+--------+--------+
+  | General | 190293 | 0      |
+  | General | 908348 | 0      |
+  | General | 998110 | 1      |
+  +---------+--------+--------+
+  3 records returned
+
+When dealing with data lacking field names, you can specify "no-headers" 
+and then refer to fields by number (starting at one), e.g.:
+
+  $ tail -5 people.dat | tablify --fs ',' --no-headers -w '3 eq "General"' -
+  +--------+--------+---------+--------+--------+
+  | Field1 | Field2 | Field3  | Field4 | Field5 |
+  +--------+--------+---------+--------+--------+
+  | 64     | George | General | 190293 | 0      |
+  | 75     | Dwight | General | 908348 | 0      |
+  | 54     | Tommy  | General | 998110 | 1      |
+  +--------+--------+---------+--------+--------+
+  3 records returned
+
+=cut
+
+# -------------------------------------------------------------------
+
+use strict;
+use Getopt::Long;
+use Pod::Usage;
+use Text::TabularDisplay;
+use Text::RecordParser;
+
+my ( $fs, $rs, $show_fields, $list, $limit, $no_headers, @where, $help );
+GetOptions(
+    'h|help'     => \$help,
+    'fs:s'       => \$fs,
+    'rs:s'       => \$rs,
+    'f|fields:s' => \$show_fields,
+    'l|list'     => \$list,
+    'limit:i'    => \$limit,
+    'w|where:s'  => \@where,
+    'no-headers' => \$no_headers,
+) or pod2usage;
+pod2usage(2) if $help;
+
+$fs       ||= "\t";
+$rs       ||= "\n";
+$no_headers = 0 unless defined $no_headers;
+my $file    = shift or pod2usage('No file');
+my $p       = Text::RecordParser->new(
+    field_separator  => $fs,
+    record_separator => $rs,
+);
+
+if ( $file eq '-' ) {
+    $p->fh( \*STDIN );
+}
+else {
+    $p->filename( $file );
+}
+
+my @fields;
+unless ( $no_headers ) {
+    $p->bind_header;
+    @fields = $p->field_list;
+}
+
+if ( $list ) {
+    pod2usage("Can't list fields with --no-headers") if $no_headers;
+    my $tab = Text::TabularDisplay->new('Field No.', 'Field');
+    my $i   = 1;
+    $tab->add( $i++, $_ ) for @fields;
+    print $tab->render, "\n";
+    exit(0);
+}
+
+my %where;
+for ( @where ) {
+    if ( /([\w\d]+)\s*(==|eq|>=?|<=?|=~)\s*(.*)/ ) {
+        my $field        = $1;
+        my $op           = $2;
+        my $value        = $3;
+        unless ( $no_headers ) {
+            my %available    = map { $_, 1 } @fields;
+            next unless $available{ $field };
+        }
+        $field-- if $field =~ /^\d+$/;
+        $where{ $field } = [ $op, $value ];
+    }
+}
+
+if ( $show_fields ) {
+    my @show    = map  { $_ =~ m/^\d+$/ && @fields 
+                         ? $_-1 < scalar @fields ? $_ : () : $_ }
+                  map  { $_ =~ m/(\d+)-(\d+)/ ? ( $1..$2 ) : $_ }
+                  split( /,/, $show_fields );
+    my @numbers = grep { /^(\d+)$/ } @show;
+
+    if ( $no_headers ) {
+        @fields = @show;
+    }
+    else {
+        if ( scalar @show == scalar @numbers ) { # all numbers
+            @numbers = map { $_ - 1 } @numbers;
+            @fields  = @fields[ @numbers ];
+        }
+        elsif ( @show ) {
+            my %available = map { $_, 1 } @fields;
+            my @temp      = @fields;
+            @fields       = map { $available{ $_ } ? $_ : () } @show;
+        }
+        die "No fields match in list '$show_fields'\n" unless @fields;
+    }
+}
+
+my $tab = Text::TabularDisplay->new( 
+    $no_headers 
+        ? ()
+        : @fields 
+            ? @fields 
+            : map { "Field$_" } @fields 
+);
+
+my $i;
+if ( $no_headers ) {
+    RECORD:
+    while ( my @data = $p->fetchrow_array ) {
+        unless ( @fields ) {
+            @fields = ( 0..$#data );
+            $tab->columns( map { "Field" . ($_+1) } @fields );
+        }
+        for my $field ( keys %where ) {
+            my ( $op, $value ) = @{ $where{ $field } };
+            my $cmd = "'$data[ ($field - 1) ]' $op $value";
+            next RECORD unless eval $cmd;
+        }
+        $tab->add( map { $data[ $_ - 1] } @fields );
+        $i++;
+        last if $limit && $i > $limit;
+    }
+}
+else {
+    RECORD:
+    while ( my $data = $p->fetchrow_hashref ) {
+        for my $field ( keys %where ) {
+            my ( $op, $value ) = @{ $where{ $field } };
+            my $cmd = "'$data->{ $field }' $op $value";
+            next RECORD unless eval $cmd;
+        }
+        $tab->add( map { $data->{ $_ } } @fields );
+        $i++;
+        last if $limit && $i > $limit;
+    }
+}
+
+my $fh;
+if ( my $pager = $ENV{'PAGER'} ) {
+    open $fh, "| $pager";
+}
+else {
+    $fh = \*STDOUT;
+}
+
+print $fh 
+    ( $i )
+    ? $tab->render . sprintf("\n$i record%s returned\n", $i > 1 ? 's' : '')
+    : "No records returned\n";
+
+close $fh;
+
+# -------------------------------------------------------------------
+
+=pod
+
+=head1 SEE ALSO
+
+=over 4
+
+=item * Text::RecordParser
+
+=item * Text::TabularDisplay
+
+=item * DBD::CSV
+
+Although I don't use this module, the idea was much the inspiration 
+for this.  I just didn't want to have to install DBI and DBD::CSV to
+get this kind of functionality.  I think my interface is simpler.
+
+=back
+
+=head1 COPYRIGHT
+
+Copyright (C) 2004 Ken Y. Clark
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+=head1 AUTHOR
+
+Ken Y. Clark E<lt>kclark@cshl.orgE<gt>.
+
+=cut

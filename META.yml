@@ -1,11 +1,12 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Text-RecordParser
-version:      0.05
+version:      0.06
 version_from: RecordParser.pm
 installdirs:  site
 requires:
     IO::Scalar:                    0
+    Text::TabularDisplay:          1.18
 
 distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.16
+generated_by: ExtUtils::MakeMaker version 6.21

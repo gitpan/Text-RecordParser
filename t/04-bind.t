@@ -7,6 +7,7 @@
 use strict;
 use Test::More tests => 9;
 use Text::RecordParser;
+use FindBin '$Bin';
 
 {
     my $p = Text::RecordParser->new;
@@ -21,10 +22,10 @@ use Text::RecordParser;
     is( $fields[1], 'bar', 'Field "bar"' );
     is( $fields[2], 'baz', 'Field "baz"' );
 
-    $p->filename('t/data/simpsons.csv');
+    $p->filename("$Bin/data/simpsons.csv");
     is( $p->bind_header, 1, 'Bind header successful' );
     @fields = $p->field_list;
     is( $fields[0], 'Name', 'Field "Name"' );
     is( $fields[2], 'City', 'Field "City"' );
-    is( $fields[-1], 'Children', 'Field "Children"' );
+    is( $fields[-1], 'Dependents', 'Field "Dependents"' );
 }

@@ -7,6 +7,7 @@
 use strict;
 use Test::More tests => 5;
 use Text::RecordParser;
+use FindBin '$Bin';
 
 {
     my $p = Text::RecordParser->new; 
@@ -17,7 +18,7 @@ use Text::RecordParser;
 
 {
     my $p        =  Text::RecordParser->new( 
-        filename => 't/data/commented.dat',
+        filename => "$Bin/data/commented.dat",
         comment  => qr/^#/,
     );
 
@@ -31,7 +32,7 @@ use Text::RecordParser;
 
 {
     my $p        =  Text::RecordParser->new( 
-        filename => 't/data/commented2.dat',
+        filename => "$Bin/data/commented2.dat",
         comment  => qr/^--/,
     );
 

@@ -1,6 +1,6 @@
 package Text::RecordParser;
 
-# $Id: RecordParser.pm,v 1.9 2003/12/16 20:43:05 kclark Exp $
+# $Id: RecordParser.pm,v 1.11 2004/04/20 21:01:47 kclark Exp $
 
 =head1 NAME
 
@@ -20,6 +20,9 @@ Text::RecordParser - read record-oriented files
 
   # Skip lines beginning with hashes
   $p->comment( qr/^#/ );
+
+  # Trim whitespace
+  $p->trim(1);
 
   # Use the fields in the first line as column names
   $p->bind_header;
@@ -58,9 +61,6 @@ field name.  If the first line contains data, you can still bind your
 own field names via C<bind_fields>.  Either way, you can then use many
 methods to get at the data as arrays or hashes.
 
-Many of the methods were shamelessly stolen from DBI and the original
-inspiration for this module, Text::xSV by Benjamin Tilly.
-
 =head1 METHODS
 
 =cut
@@ -71,7 +71,7 @@ use Text::ParseWords 'parse_line';
 use IO::Scalar;
 
 use vars '$VERSION';
-$VERSION = 0.05;
+$VERSION = 0.06;
 
 # ----------------------------------------------------------------
 sub new {
@@ -120,6 +120,11 @@ A callback applied to all the fields as they are read.
 
 A callback applied to the column names.
 
+=item * trim
+
+Boolean to enable trimming of leading and trailing whitespace from fields
+(useful if splitting on whitespace only).
+
 =back
 
 See methods for each argument name for more information.
@@ -138,7 +143,7 @@ treated as the C<filename> argument.
 
     my $data_handles = 0;
     for my $arg ( 
-        qw[ filename fh header_filter field_filter 
+        qw[ filename fh header_filter field_filter trim
             field_separator record_separator data comment
         ] 
     ) {
@@ -364,15 +369,24 @@ of the fields.
         $line_no++;
         defined( $line = <$fh> ) or return;
         chomp( $line );
+        $line =~ s/^\s+|\s+$//g if $self->trim; 
         next if $comment && $line =~ $comment;
         last if $line;
     }
 
-    my @fields = parse_line( quotemeta $self->field_separator, 1, $line )
-        or croak("Error reading line number $line_no:\n'$line'");
+    my $separator = $self->field_separator;
+    my @fields    = ref $separator eq 'Regexp'
+        ? parse_line( $separator, 0, $line )
+        : parse_line( $separator, 1, $line )
+    ;
+    croak("Error reading line number $line_no:\n'$line'") unless @fields;
 
     if ( my $filter = $self->field_filter ) {
         @fields = map { $filter->( $_ ) } @fields;
+    }
+
+    if ( $self->trim ) {
+        @fields = map { s/^\s+|\s+$//g; $_ } @fields;
     }
 
     while ( my ( $position, $callback ) = each %{ $self->field_compute } ) {
@@ -622,10 +636,10 @@ sub field_filter {
 
 A callback which is applied to each field.  The callback will be
 passed the current value of the field.  Whatever is passed back will
-become the new value of the field.  Here's an example that removes the
-leading and trailing spaces from each field:
+become the new value of the field.  Here's an example that capitalizes
+field values:
 
-  $p->field_filter( sub { $_ = shift; s/^\s+|\s+$//g; $_ } );
+  $p->field_filter( sub { $_ = shift; uc(lc($_)) } );
 
 =cut
 
@@ -692,10 +706,11 @@ sub field_separator {
 =head2 field_separator
 
 Gets and sets the token to use as the field delimiter.  The default is 
-a comma.
+a comma.  Regular expressions can be specified using qr//.
 
   $p->field_separator("\t");     # splits fields on tabs
   $p->field_separator('::');     # splits fields on double colons
+  $p->field_separator(qr/\s+/);  # splits fields on whitespace
   my $sep = $p->field_separator; # returns the current separator
 
 =cut
@@ -819,6 +834,28 @@ Set the record and field separators like so:
     return $self->{'record_separator'} || "\n";
 }
 
+# ----------------------------------------------------------------
+sub trim {
+
+=pod
+
+=head2 trim
+
+Remove leading and trailing whitespace from fields.
+
+  my $trim_value = $p->trim(1);
+
+=cut
+
+    my ( $self, $arg ) = @_;
+
+    if ( defined $arg ) {
+        $self->{'trim'} = $arg ? 1 : 0;    
+    }
+    
+    return $self->{'trim'};
+}
+
 1;
 
 # ----------------------------------------------------------------
@@ -831,17 +868,37 @@ Set the record and field separators like so:
 
 =head1 AUTHOR
 
-Ken Y. Clark E<lt>kclark@cpan.orgE<gt>
+Ken Y. Clark E<lt>kclark@cpan.orgE<gt>.
+
+=head1 CREDITS
+
+Thanks to the following:
+
+=over 4
+
+=item * Benjamin Tilly 
+
+For Text::xSV, the inspirado for this module
+
+=item * Tim Bunce et al.
+
+For DBI, from which many of the methods were shamelessly stolen
+
+=item * Tom Aldcroft 
+
+For contributing code to make it easy to parse whitespace-delimited data
+
+=back
 
 =head1 COPYRIGHT
 
-Copyright (c) 2003 Ken Y. Clark
+Copyright (c) 2003-4 Ken Y. Clark
 
 This library is free software;  you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =head1 BUGS
 
-Please use http://rt.cpan.org/ for reporting bugs.
+None known.  Please use http://rt.cpan.org/ for reporting bugs.
 
 =cut

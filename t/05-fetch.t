@@ -5,13 +5,14 @@
 #
 
 use strict;
-use Test::More tests => 20;
+use Test::More tests => 22;
 use Text::RecordParser;
+use FindBin '$Bin';
 
 {
     my $p = Text::RecordParser->new;
 
-    $p->filename('t/data/simpsons.csv');
+    $p->filename("$Bin/data/simpsons.csv");
     $p->bind_header;
 
     # Extract nothing
@@ -28,17 +29,21 @@ use Text::RecordParser;
         'Address is "748 Evergreen Terrace"' 
     );
     is( $city, 'Springfield', 'City is "Springfield"' );
+
 }
 
 {
     my $p = Text::RecordParser->new;
 
-    $p->filename('t/data/simpsons.csv');
+    $p->filename("$Bin/data/simpsons.csv");
     $p->bind_header;
 
     my @row = $p->fetchrow_array;
     is( $row[0], '"Simpson, Homer"', 'Field "Simpson, Homer"' );
     is( $row[1], '747 Evergreen Terrace', 'Field "747 Evergreen Terrace"' );
+    is( $row[-1], q["Bart,Lisa,Maggie,Santa's Little Helper"],
+        'Correct dependents list'
+    );
 
     my $row = $p->fetchrow_hashref;
     is( $row->{'Name'}, '"Flanders, Ned"', 'Name is "Flanders, Ned"' );
@@ -49,7 +54,7 @@ use Text::RecordParser;
 {
     my $p = Text::RecordParser->new;
 
-    $p->filename('t/data/simpsons.csv');
+    $p->filename("$Bin/data/simpsons.csv");
     $p->bind_header;
 
     my $data = $p->fetchall_arrayref;
@@ -62,7 +67,7 @@ use Text::RecordParser;
 {
     my $p = Text::RecordParser->new;
 
-    $p->filename('t/data/simpsons.csv');
+    $p->filename("$Bin/data/simpsons.csv");
     $p->bind_header;
 
     my $data = $p->fetchall_arrayref( { Columns => {} } );
@@ -76,7 +81,7 @@ use Text::RecordParser;
 {
     my $p = Text::RecordParser->new;
 
-    $p->filename('t/data/simpsons.csv');
+    $p->filename("$Bin/data/simpsons.csv");
     $p->bind_header;
 
     my $data = $p->fetchall_hashref('Name');
@@ -88,7 +93,7 @@ use Text::RecordParser;
 {
     my $p = Text::RecordParser->new;
 
-    $p->filename('t/data/simpsons.csv');
+    $p->filename("$Bin/data/simpsons.csv");
     $p->bind_header;
 
     $p->field_compute( 
@@ -106,4 +111,18 @@ use Text::RecordParser;
     is( scalar keys %$data, 2, 'fetchall_hashref gets 2 records' );
     my $row = $data->{'Crazy Homer!'};
     is( $row->{'Wife'}, 'Marge', 'Wife is "Marge"' );
+}
+
+{
+    my $p = Text::RecordParser->new(
+        trim            => 1,
+        field_separator => qr/\s+/,
+        filename        => "$Bin/data/simpsons.ssv",
+    );
+
+    $p->bind_header;
+
+    my $row = $p->fetchrow_hashref;
+    is( $row->{'Address'}, '747 Evergreen Terrace', 
+        'Address is "747 Evergreen Terrace"' );
 }

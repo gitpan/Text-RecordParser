@@ -15,6 +15,9 @@ SYNOPSIS
       # Skip lines beginning with hashes
       $p->comment( qr/^#/ );
 
+      # Trim whitespace
+      $p->trim(1);
+
       # Use the fields in the first line as column names
       $p->bind_header;
 
@@ -51,9 +54,6 @@ DESCRIPTION
     "bind_fields". Either way, you can then use many methods to get at the
     data as arrays or hashes.
 
-    Many of the methods were shamelessly stolen from DBI and the original
-    inspiration for this module, Text::xSV by Benjamin Tilly.
-
 METHODS
   new
     This is the constructor. It takes a hash of optional arguments. Each
@@ -85,6 +85,10 @@ METHODS
 
     * header_filter
         A callback applied to the column names.
+
+    * trim
+        Boolean to enable trimming of leading and trailing whitespace from
+        fields (useful if splitting on whitespace only).
 
     See methods for each argument name for more information.
 
@@ -241,10 +245,9 @@ METHODS
   field_filter
     A callback which is applied to each field. The callback will be passed
     the current value of the field. Whatever is passed back will become the
-    new value of the field. Here's an example that removes the leading and
-    trailing spaces from each field:
+    new value of the field. Here's an example that capitalizes field values:
 
-      $p->field_filter( sub { $_ = shift; s/^\s+|\s+$//g; $_ } );
+      $p->field_filter( sub { $_ = shift; uc(lc($_)) } );
 
   field_list
     Returns the fields bound via "bind_fields" (or "bind_header").
@@ -259,10 +262,11 @@ METHODS
 
   field_separator
     Gets and sets the token to use as the field delimiter. The default is a
-    comma.
+    comma. Regular expressions can be specified using qr//.
 
       $p->field_separator("\t");     # splits fields on tabs
       $p->field_separator('::');     # splits fields on double colons
+      $p->field_separator(qr/\s+/);  # splits fields on whitespace
       my $sep = $p->field_separator; # returns the current separator
 
   filename
@@ -300,11 +304,29 @@ METHODS
       $p->record_separator("\n//\n");
       $p->field_separator("\n");
 
+  trim
+    Remove leading and trailing whitespace from fields.
+
+      my $trim_value = $p->trim(1);
+
 AUTHOR
     Ken Y. Clark <kclark@cpan.org>
 
+CREDITS
+    Thanks to the following:
+
+    * Benjamin Tilly
+        For Text::xSV, the inspirado for this module
+
+    * Tim Bunce et al.
+        For DBI, from which many of the methods were shamelessly stolen
+
+    * Tom Aldcroft
+        For contributing code to make it easy to parse whitespace-delimited
+        data
+
 COPYRIGHT
-    Copyright (c) 2003 Ken Y. Clark
+    Copyright (c) 2003-4 Ken Y. Clark
 
     This library is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.

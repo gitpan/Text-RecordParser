@@ -7,10 +7,11 @@
 use strict;
 use Test::More tests => 4;
 use Text::RecordParser;
+use FindBin '$Bin';
 
 {
     my $p = Text::RecordParser->new(
-        filename        => 't/data/simpsons.tab',
+        filename        => "$Bin/data/simpsons.tab",
         field_separator => "\t",
     );
     $p->bind_header;
@@ -20,7 +21,7 @@ use Text::RecordParser;
 
 {
     my $p = Text::RecordParser->new(
-        filename         => 't/data/simpsons.alt',
+        filename         => "$Bin/data/simpsons.alt",
         field_separator  => "\n",
         record_separator => "\n//\n",
     );
@@ -31,8 +32,8 @@ use Text::RecordParser;
 
 {
     my $p = Text::RecordParser->new(
-        filename         => 't/data/pipe.dat',
-        field_separator  => '|',
+        filename         => "$Bin/data/pipe.dat",
+        field_separator  => qr/\|/,
     );
     my $row = $p->fetchrow_array;
     is( $row->[0], 'MSH', "First field is 'MSH'" );
