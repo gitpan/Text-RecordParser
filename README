@@ -6,8 +6,8 @@ SYNOPSIS
       my $p = Text::RecordParser->new;
       $p->filename('foo.csv');
 
-      # Split records on Micro$oft newlines
-      $p->record_separator("\r\n");
+      # Split records on two newlines
+      $p->record_separator("\n\n");
 
       # Split fields on tabs
       $p->field_separator("\t");
@@ -39,14 +39,14 @@ SYNOPSIS
 
 DESCRIPTION
     This module is for reading record-oriented data. The most common example
-    have records separated by newlines ("\n" or "\r\n") and fields separated
-    by commas or tabs, but this module aims to provide a consistent
-    interface for handling sequential records in a file however they may be
-    delimited. Typically this data lists the fields in the first line of the
-    file, in which case you should call "bind_headers" to bind the field
-    name. If the first line contains data, you can still bind your own field
-    names via "bind_fields". Either way, you can then use many methods to
-    get at the data as arrays or hashes.
+    have records separated by newlines and fields separated by commas or
+    tabs, but this module aims to provide a consistent interface for
+    handling sequential records in a file however they may be delimited.
+    Typically this data lists the fields in the first line of the file, in
+    which case you should call "bind_header" to bind the field name. If the
+    first line contains data, you can still bind your own field names via
+    "bind_fields". Either way, you can then use many methods to get at the
+    data as arrays or hashes.
 
     Many of the methods were shamelessly stolen from DBI and the original
     inspiration for this module, Text::xSV by Benjamin Tilly.
@@ -60,6 +60,9 @@ METHODS
         The path to the file being read. If the filename is passed and the
         fh is not, then it will open a filehandle on that file and sets "fh"
         accordingly.
+
+    * data
+        The data to read
 
     * fh
         The filehandle of the file to read.
@@ -76,9 +79,11 @@ METHODS
     * header_filter
         A callback applied to the column names.
 
+    See methods for each argument name for more information.
+
   bind_fields
-    Takes an array of field names, memorizes the field positions for later
-    use. "bind_headers" is preferred.
+    Takes an array of field names and memorizes the field positions for
+    later use.
 
       $p->bind_fields( qw[ name rank serial_number ] );
 
@@ -90,6 +95,20 @@ METHODS
       $p->bind_header;
       my $name = $p->extract('name');
 
+  data
+    Allows a scalar, scalar reference, glob, array, or array reference as
+    the thing to read instead of a file handle.
+
+      $p->data( $string );
+      $p->data( \$string );
+      $p->data( @lines );
+      $p->data( [ $line1, $line2, $line3] );
+      $p->data( IO::File->new('<data') );
+
+    It's not advised to pass a filehandle to "data" as it will read the
+    entire contents of the file rather than one line at a time if you set it
+    via "fh".
+
   extract
     Extracts a list of fields out of the last row read. The field names must
     correspond to the field names bound either via "bind_fields" or
@@ -98,7 +117,7 @@ METHODS
       my ( $foo, $bar, $baz ) = $p->extract( qw[ foo bar baz ] );
 
   fetchrow_array
-    Reads a row from the file and returns an array or (arrayref) of the
+    Reads a row from the file and returns an array or array reference of the
     fields.
 
       my @values = $p->fetchrow_array;
@@ -127,7 +146,10 @@ METHODS
       }
 
   fetchall_hashref
-    Like DBI's fetchall_hashref.
+    Like DBI's fetchall_hashref, this returns a hash reference of hash
+    references. The keys of the top-level hashref are the field values of
+    the field argument you supply. The field name you supply can be a field
+    created by a "field_compute".
 
       my $records = $p->fetchall_hashref('id');
       for my $id ( keys %$records ) {
@@ -143,7 +165,16 @@ METHODS
 
   field_compute
     A callback applied to the fields identified by position (or field name
-    if "bind_fields" or "bind_headers" was called). If data looks like this:
+    if "bind_fields" or "bind_header" was called).
+
+    The callback will be passed two arguments:
+
+    1   The current field
+
+    2   A reference to all the other fields, either as an array or hash
+        reference, depending on the method which you called.
+
+    If data looks like this:
 
       parent    children
       Mike      Greg,Peter,Bobby
@@ -153,13 +184,6 @@ METHODS
     values like so:
 
       $p->field_compute( 'children', sub { [ split /,/, shift() ] } );
-
-    The callback will be passed two arguments:
-
-    1   The current field
-
-    2   A reference to all the other fields, either as an array or hash
-        reference, depending on the method which you called.
 
     The field position or name doesn't actually have to exist, which means
     you could create new, computed fields on-the-fly. E.g., if you data
@@ -195,8 +219,10 @@ METHODS
         9 + 5 + 4 = 18
 
   field_filter
-    A callback which is applied to each field. Here's an example that
-    removes the leading and trailing spaces from each field:
+    A callback which is applied to each field. The callback will be passed
+    the current value of the field. Whatever is passed back will become the
+    new value of the field. Here's an example that removes the leading and
+    trailing spaces from each field:
 
       $p->field_filter( sub { $_ = shift; s/^\s+|\s+$//g; $_ } );
 
@@ -208,7 +234,8 @@ METHODS
       print join(', ', @fields); # prints "foo, bar, baz"
 
   field_positions
-    Returns the field positions bound via "bind_fields" (or "bind_header").
+    Returns a hash of the fields and their positions bound via "bind_fields"
+    (or "bind_header").
 
   field_separator
     Gets and sets the token to use as the field delimiter. The default is a
@@ -226,8 +253,10 @@ METHODS
       $p->filename('/path/to/file.dat');
 
   header_filter
-    A callback applied to column header names. Here's an example that
-    collapses spaces into a single underscore and lowercases the letters:
+    A callback applied to column header names. The callback will be passed
+    the current value of the header. Whatever is returned will become the
+    new value of the header. Here's an example that collapses spaces into a
+    single underscore and lowercases the letters:
 
       $p->header_filter( sub { $_ = shift; s/\s+/_/g; lc $_ } );
 

@@ -1,6 +1,6 @@
 package Text::RecordParser;
 
-# $Id: RecordParser.pm,v 1.1.1.1 2003/05/01 15:26:00 kclark Exp $
+# $Id: RecordParser.pm,v 1.2 2003/05/07 04:47:30 kclark Exp $
 
 =head1 NAME
 
@@ -12,8 +12,8 @@ Text::RecordParser - read record-oriented files
   my $p = Text::RecordParser->new;
   $p->filename('foo.csv');
 
-  # Split records on Micro$oft newlines
-  $p->record_separator("\r\n");
+  # Split records on two newlines
+  $p->record_separator("\n\n");
 
   # Split fields on tabs
   $p->field_separator("\t");
@@ -46,14 +46,14 @@ Text::RecordParser - read record-oriented files
 =head1 DESCRIPTION
 
 This module is for reading record-oriented data.  The most common
-example have records separated by newlines ("\n" or "\r\n") and fields
-separated by commas or tabs, but this module aims to provide a
-consistent interface for handling sequential records in a file however
-they may be delimited.  Typically this data lists the fields in the
-first line of the file, in which case you should call C<bind_headers>
-to bind the field name.  If the first line contains data, you can
-still bind your own field names via C<bind_fields>.  Either way, you
-can then use many methods to get at the data as arrays or hashes.
+example have records separated by newlines and fields separated by
+commas or tabs, but this module aims to provide a consistent interface
+for handling sequential records in a file however they may be
+delimited.  Typically this data lists the fields in the first line of
+the file, in which case you should call C<bind_header> to bind the
+field name.  If the first line contains data, you can still bind your
+own field names via C<bind_fields>.  Either way, you can then use many
+methods to get at the data as arrays or hashes.
 
 Many of the methods were shamelessly stolen from DBI and the original
 inspiration for this module, Text::xSV by Benjamin Tilly.
@@ -65,9 +65,10 @@ inspiration for this module, Text::xSV by Benjamin Tilly.
 use strict;
 use Carp 'croak';
 use Text::ParseWords 'parse_line';
+use IO::Scalar;
 
 use vars '$VERSION';
-$VERSION = 0.01;
+$VERSION = 0.02;
 
 # ----------------------------------------------------------------
 sub new {
@@ -86,6 +87,10 @@ argument can also be set through the method of the same name.
 The path to the file being read.  If the filename is passed and the fh
 is not, then it will open a filehandle on that file and sets C<fh>
 accordingly.  
+
+=item * data
+
+The data to read
 
 =item * fh
 
@@ -109,6 +114,8 @@ A callback applied to the column names.
 
 =back
 
+See methods for each argument name for more information.
+
 =cut
 
     my $class = shift;
@@ -117,14 +124,22 @@ A callback applied to the column names.
 
     my $self  = bless {}, $class;
 
+    my $data_handles = 0;
     for my $arg ( 
         qw[ filename fh header_filter field_filter 
-            field_separator record_separator
+            field_separator record_separator data
         ] 
     ) {
         next unless $args->{ $arg };
+        $data_handles++ if $arg eq 'filename' ||
+            $arg eq 'fh' || $arg eq 'data';
         $self->$arg( $args->{ $arg } );
     }
+
+    croak(
+        'Passed too many arguments to read the data. '.
+        'Please choose only one of "filename," "fh," or "data."'
+    ) if $data_handles > 1;
 
     return $self;
 }
@@ -136,8 +151,8 @@ sub bind_fields {
 
 =head2 bind_fields
 
-Takes an array of field names, memorizes the field positions for later
-use.  C<bind_headers> is preferred.
+Takes an array of field names and memorizes the field positions for 
+later use.
 
   $p->bind_fields( qw[ name rank serial_number ] );
 
@@ -190,6 +205,60 @@ opening the file in order to bind the field names in the first row.
 }
 
 # ----------------------------------------------------------------
+sub data {
+
+=pod
+
+=head2 data
+
+Allows a scalar, scalar reference, glob, array, or array reference as
+the thing to read instead of a file handle.
+
+  $p->data( $string );
+  $p->data( \$string );
+  $p->data( @lines );
+  $p->data( [ $line1, $line2, $line3] );
+  $p->data( IO::File->new('<data') );
+
+It's not advised to pass a filehandle to C<data> as it will read the
+entire contents of the file rather than one line at a time if you set
+it via C<fh>.
+
+=cut
+
+    my $self = shift;
+    my $data;
+
+    if ( @_ ) {
+        my $arg = shift;
+
+        if ( UNIVERSAL::isa( $arg, 'SCALAR' ) ) {
+            $data = $$arg;
+        }
+        elsif ( UNIVERSAL::isa( $arg, 'ARRAY' ) ) {
+            $data = join '', @$arg;
+        }
+        elsif ( UNIVERSAL::isa( $arg, 'GLOB' ) ) {
+            local $/;
+            $data = <$arg>;
+        }
+        elsif ( ! ref $arg && @_ ) {
+            $data = join '', $arg, @_;
+        }
+        else {
+            $data = $arg;
+        }
+    }
+
+    if ( $data ) {
+        my $fh = IO::Scalar->new( \$data );
+        $self->fh( $fh );
+    }
+
+    return 1;
+}
+
+# ----------------------------------------------------------------
 sub extract {
 
 =pod
@@ -232,7 +301,8 @@ sub fetchrow_array {
 
 =head2 fetchrow_array
 
-Reads a row from the file and returns an array or (arrayref) of the fields.
+Reads a row from the file and returns an array or array reference 
+of the fields.
 
   my @values = $p->fetchrow_array;
 
@@ -287,7 +357,6 @@ C<bind_header>.
     }
 
     while ( my ( $position, $callback ) = each %{ $self->field_compute } ) {
-#        next unless exists $return{ $position };
         $return{ $position } = $callback->( $return{ $position }, \%return );
     }
 
@@ -337,7 +406,10 @@ sub fetchall_hashref {
 
 =head2 fetchall_hashref
 
-Like DBI's fetchall_hashref.
+Like DBI's fetchall_hashref, this returns a hash reference of hash
+references.  The keys of the top-level hashref are the field values
+of the field argument you supply.  The field name you supply can be
+a field created by a C<field_compute>.
 
   my $records = $p->fetchall_hashref('id');
   for my $id ( keys %$records ) {
@@ -352,12 +424,14 @@ Like DBI's fetchall_hashref.
     my @fields    = $self->field_list or croak(
         "Can't find field list.  Did you bind_fields or bind_header?"
     );
-    my %fields    = map { $_, 1 } @fields;
 
-    croak("Invalid key field: '$key_field'") unless $fields{ $key_field };
-
-    my %return;
+    my ( %return, $field_ok );
     while ( my $record = $self->fetchrow_hashref ) {
+        unless ( $field_ok ) {
+            croak("Invalid key field: '$key_field'") unless 
+                exists $record->{ $key_field };
+            $field_ok = 1;
+        }
         $return{ $record->{ $key_field } } = $record;
     }
 
@@ -382,13 +456,14 @@ Gets or sets the filehandle of the file being read.
 
     if ( defined $arg ) {
         croak("Argument to fh doesn't look like a filehandle")
-            unless ref $arg eq 'GLOB';
+            unless UNIVERSAL::isa( $arg, 'GLOB' );
 
         if ( defined $self->{'fh'} ) {
             close $self->{'fh'} or croak("Can't close existing filehandle: $!");
         }
 
-        $self->{'fh'} = $arg;
+        $self->{'fh'}       = $arg;
+        $self->{'filename'} = '';
     }
 
     if ( !defined $self->{'fh'} && $self->{'filename'} ) {
@@ -408,17 +483,7 @@ sub field_compute {
 =head2 field_compute
 
 A callback applied to the fields identified by position (or field
-name if C<bind_fields> or C<bind_headers> was called).  If data 
-looks like this:
-
-  parent    children
-  Mike      Greg,Peter,Bobby
-  Carol     Marcia,Jane,Cindy
-
-You could split the "children" field into an array reference with the 
-values like so:
-
-  $p->field_compute( 'children', sub { [ split /,/, shift() ] } );
+name if C<bind_fields> or C<bind_header> was called).  
 
 The callback will be passed two arguments:
 
@@ -434,6 +499,17 @@ A reference to all the other fields, either as an array or hash
 reference, depending on the method which you called.
 
 =back
+
+If data looks like this:
+
+  parent    children
+  Mike      Greg,Peter,Bobby
+  Carol     Marcia,Jane,Cindy
+
+You could split the "children" field into an array reference with the 
+values like so:
+
+  $p->field_compute( 'children', sub { [ split /,/, shift() ] } );
 
 The field position or name doesn't actually have to exist, which means
 you could create new, computed fields on-the-fly.  E.g., if you data
@@ -474,10 +550,8 @@ Prints:
 
     if ( @_ ) {
         my ( $position, $callback ) = @_;
-
         croak('No field name or position')   unless defined $position;
         croak('Callback not code reference') unless ref $callback eq 'CODE';
-
         $self->{'field_computes'}{ $position } = $callback;
     }
 
@@ -491,8 +565,10 @@ sub field_filter {
 
 =head2 field_filter
 
-A callback which is applied to each field.  Here's an example that
-removes the leading and trailing spaces from each field:
+A callback which is applied to each field.  The callback will be
+passed the current value of the field.  Whatever is passed back will
+become the new value of the field.  Here's an example that removes the
+leading and trailing spaces from each field:
 
   $p->field_filter( sub { $_ = shift; s/^\s+|\s+$//g; $_ } );
 
@@ -544,7 +620,8 @@ sub field_positions {
 
 =head2 field_positions
 
-Returns the field positions bound via C<bind_fields> (or C<bind_header>).
+Returns a hash of the fields and their positions bound via 
+C<bind_fields> (or C<bind_header>).
 
 =cut
 
@@ -621,8 +698,10 @@ sub header_filter {
 
 =head2 header_filter
 
-A callback applied to column header names.  Here's an example that
-collapses spaces into a single underscore and lowercases the letters:
+A callback applied to column header names.  The callback will be
+passed the current value of the header.  Whatever is returned will
+become the new value of the header.  Here's an example that collapses
+spaces into a single underscore and lowercases the letters:
 
   $p->header_filter( sub { $_ = shift; s/\s+/_/g; lc $_ } );
 
@@ -688,7 +767,6 @@ Set the record and field separators like so:
 1;
 
 # ----------------------------------------------------------------
-
 =pod
 
 =head1 AUTHOR

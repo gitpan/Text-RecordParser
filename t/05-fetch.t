@@ -5,7 +5,7 @@
 #
 
 use strict;
-use Test::More tests => 18;
+use Test::More tests => 20;
 use Text::RecordParser;
 
 {
@@ -82,5 +82,28 @@ use Text::RecordParser;
     my $data = $p->fetchall_hashref('Name');
     is( scalar keys %$data, 2, 'fetchall_hashref gets 2 records' );
     my $row = $data->{'"Simpson, Homer"'};
+    is( $row->{'Wife'}, 'Marge', 'Wife is "Marge"' );
+}
+
+{
+    my $p = Text::RecordParser->new;
+
+    $p->filename('t/data/simpsons.csv');
+    $p->bind_header;
+
+    $p->field_compute( 
+        'crazy_name', 
+        sub { 
+            my ( $field, $others ) = @_; 
+            my $name = $others->{'Name'};
+            $name =~ s/"//g;
+            $name =~ s/^.*,\s+//g;
+            return "Crazy $name!";
+        } 
+    );
+
+    my $data = $p->fetchall_hashref('crazy_name');
+    is( scalar keys %$data, 2, 'fetchall_hashref gets 2 records' );
+    my $row = $data->{'Crazy Homer!'};
     is( $row->{'Wife'}, 'Marge', 'Wife is "Marge"' );
 }

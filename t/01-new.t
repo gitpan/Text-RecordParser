@@ -5,7 +5,7 @@
 #
 
 use strict;
-use Test::More tests => 12;
+use Test::More tests => 14;
 
 require_ok( 'Text::RecordParser' );
 
@@ -43,3 +43,19 @@ require_ok( 'Text::RecordParser' );
     is( ref $p->header_filter, 'CODE', 'Header filter is code' );
 }
 
+#
+# New with too many arguments
+#
+{
+    my $p;
+    eval {
+        $p           = Text::RecordParser->new(
+            filename => 't/data/simpsons.csv',
+            data     => "foo\tbar\tbaz",
+        );
+    };
+    my $err = $@;
+
+    is( $p, undef, 'Did not create parser...' );
+    like( $err, qr/too many arguments/, '...because too many args' );
+}

@@ -1,3 +1,8 @@
 0.01    Apr 28 2003
     
 -   Created initial version
+
+0.02    May  6 2003
+
+-   Added "data" method to allow reading of data from a scalar
+-   Allow "fetchall_hashref" to use a computed field for the key
