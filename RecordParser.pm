@@ -1,6 +1,6 @@
 package Text::RecordParser;
 
-# $Id: RecordParser.pm,v 1.2 2003/05/07 04:47:30 kclark Exp $
+# $Id: RecordParser.pm,v 1.5 2003/06/27 21:48:09 kclark Exp $
 
 =head1 NAME
 
@@ -68,7 +68,7 @@ use Text::ParseWords 'parse_line';
 use IO::Scalar;
 
 use vars '$VERSION';
-$VERSION = 0.02;
+$VERSION = 0.03;
 
 # ----------------------------------------------------------------
 sub new {
@@ -116,11 +116,15 @@ A callback applied to the column names.
 
 See methods for each argument name for more information.
 
+Alternately, if you supply a single argument to C<new>, it will be 
+treated as the C<filename> argument.
+
 =cut
 
     my $class = shift;
-    my $args  = defined $_[0] && UNIVERSAL::isa( $_[0], 'HASH' )
-                ? shift : { @_ };
+    my $args  = defined $_[0] && UNIVERSAL::isa( $_[0], 'HASH' ) ? shift 
+                : scalar @_ == 1 ? { filename => shift }
+                : { @_ };
 
     my $self  = bless {}, $class;
 
@@ -273,20 +277,24 @@ C<bind_header>.
 
 =cut
 
-    my $self   = shift;
-    my @fields = @_ or return;
-    my $record = $self->fetchrow_hashref;
+    my $self    = shift;
+    my @fields  = @_ or return;
+    my $record  = $self->fetchrow_hashref;
+    my %allowed = map { $_, 1 } $self->field_list;
+
+    unless ( %allowed ) {
+        croak("Can't call extract without binding fields");
+    }
 
     my @data;
     foreach my $field ( @fields ) {
-        if ( exists $record->{ $field } ) {
+        if ( $allowed{ $field } ) {
             push @data, $record->{ $field };
         }
         else {
-            my @allowed = $self->field_list;
             croak(
                 "Invalid field $field for file '".$self->filename."'.\n" .
-                'Valid fields are: (' . join(', ', @allowed) . "\n"
+                'Valid fields are: ' . join(', ', $self->field_list) . "\n"
             );
         }
     }
@@ -767,6 +775,11 @@ Set the record and field separators like so:
 1;
 
 # ----------------------------------------------------------------
+# I must Create a System, or be enslav'd by another Man's; 
+# I will not Reason and Compare; my business is to Create.
+#   -- William Blake, "Jerusalem"                  
+# ----------------------------------------------------------------
+
 =pod
 
 =head1 AUTHOR

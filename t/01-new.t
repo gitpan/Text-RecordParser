@@ -5,7 +5,7 @@
 #
 
 use strict;
-use Test::More tests => 14;
+use Test::More tests => 15;
 
 require_ok( 'Text::RecordParser' );
 
@@ -26,6 +26,12 @@ require_ok( 'Text::RecordParser' );
 #
 # New with arguments
 #
+{
+    my $file = 't/data/simpsons.csv';
+    my $p    = Text::RecordParser->new($file);
+    is( $p->filename, $file, "Filename set to '$file'" );
+}
+
 {
     my $file             = 't/data/simpsons.csv';
     my $p                = Text::RecordParser->new(

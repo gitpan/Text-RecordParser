@@ -6,3 +6,8 @@
 
 -   Added "data" method to allow reading of data from a scalar
 -   Allow "fetchall_hashref" to use a computed field for the key
+
+0.03    June 27 2003
+
+-   Cleaned up "extract" a bit
+-   Allow "new" to accept a single argument and treat as "filename"

@@ -1,5 +1,3 @@
-# $Id: Makefile.PL,v 1.1.1.1 2003/05/01 15:26:00 kclark Exp $
-
 use strict;
 use ExtUtils::MakeMaker;
 

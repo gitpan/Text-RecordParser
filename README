@@ -81,6 +81,9 @@ METHODS
 
     See methods for each argument name for more information.
 
+    Alternately, if you supply a single argument to "new", it will be
+    treated as the "filename" argument.
+
   bind_fields
     Takes an array of field names and memorizes the field positions for
     later use.
