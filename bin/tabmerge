@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: tabmerge,v 1.5 2004/11/05 01:45:08 kclark Exp $
+# $Id: tabmerge,v 1.6 2004/11/16 20:27:47 kclark Exp $
 
 =head1 NAME
 
@@ -31,8 +31,12 @@ Options:
 
 =head1 DESCRIPTION
 
-This program merges the fields of delimited text files.  The output
-can be based on fields as determined by the three "action" flags.
+This program merges the fields -- not the rows -- of delimited text
+files.  That is, if several files are almost but not quite entirely
+unlike each other in their structure (in their field names, numbers or
+orders), this script allows you to easily unify the files into one
+file with all the same fields.  The output can be based on fields as
+determined by the three "action" flags.
 
 For the following examples, consider three files that contain the
 following fields:

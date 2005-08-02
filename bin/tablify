@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: tablify,v 1.5 2004/11/16 01:55:49 kclark Exp $
+# $Id: tablify,v 1.6 2005/08/02 15:57:44 kclark Exp $
 
 =head1 NAME
 
@@ -27,6 +27,7 @@ Options:
                       (default is tab "\t")
   --rs=x              Use "x" as the record separator 
                       (default is newline "\n")
+  --as-html           Create an HTML table instead of plain text
 
 =head1 DESCRIPTION
 

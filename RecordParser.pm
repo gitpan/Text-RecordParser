@@ -1,6 +1,6 @@
 package Text::RecordParser;
 
-# $Id: RecordParser.pm,v 1.15 2004/11/16 19:46:18 kclark Exp $
+# $Id: RecordParser.pm,v 1.16 2005/08/02 15:57:44 kclark Exp $
 
 =head1 NAME
 
@@ -71,7 +71,7 @@ use Text::ParseWords qw[ parse_line ];
 use IO::Scalar;
 
 use vars '$VERSION';
-$VERSION = 0.08;
+$VERSION = 0.09;
 
 # ----------------------------------------------------------------
 sub new {
@@ -375,6 +375,7 @@ of the fields.
     }
 
     my $separator = $self->field_separator;
+    $separator eq '|' and $separator = '\|';
     my @fields    = ref $separator eq 'Regexp'
         ? parse_line( $separator, 0, $line )
         : parse_line( $separator, 1, $line )

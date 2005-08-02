@@ -1,9 +1,10 @@
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Text-RecordParser
-version:      0.08
+version:      0.09
 version_from: RecordParser.pm
 installdirs:  site
 requires:
+    Text::TabularDisplay:          1.2
     IO::Scalar:                    0
 
 distribution_type: module

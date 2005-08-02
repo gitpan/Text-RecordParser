@@ -5,7 +5,7 @@
 #
 
 use strict;
-use Test::More tests => 22;
+use Test::More tests => 23;
 use Text::RecordParser;
 use FindBin '$Bin';
 
@@ -118,6 +118,20 @@ use FindBin '$Bin';
         trim            => 1,
         field_separator => qr/\s+/,
         filename        => "$Bin/data/simpsons.ssv",
+    );
+
+    $p->bind_header;
+
+    my $row = $p->fetchrow_hashref;
+    is( $row->{'Address'}, '747 Evergreen Terrace', 
+        'Address is "747 Evergreen Terrace"' );
+}
+
+{
+    my $p = Text::RecordParser->new(
+        trim            => 1,
+        field_separator => '|',
+        filename        => "$Bin/data/simpsons.pdd",
     );
 
     $p->bind_header;

@@ -31,5 +31,6 @@ t/data/people-no-header.dat
 t/data/simpsons.alt
 t/data/simpsons.csv
 t/data/simpsons.tab
+t/data/simpsons.pdd
 t/data/simpsons.ssv
 META.yml                                Module meta-data (added by MakeMaker)
