@@ -1,6 +1,174 @@
-#!/usr/bin/perl
+#!perl
 
-# $Id: tablify,v 1.6 2005/08/02 15:57:44 kclark Exp $
+use strict;
+use warnings;
+use version;
+use English qw( -no_match_vars );
+use File::Basename;
+use Getopt::Long;
+use Pod::Usage;
+use Text::RecordParser;
+use Text::TabularDisplay;
+
+our $VERSION = version->new(qw$Revision: 1.8 $);
+
+my $fs         = "\t";
+my $rs         = "\n";
+my $no_headers = 0;
+
+my ( $show_fields, $list, $limit, @where, $help, $man_page, $show_version );
+GetOptions(
+    'fs:s'       => \$fs,
+    'rs:s'       => \$rs,
+    'f|fields:s' => \$show_fields,
+    'l|list'     => \$list,
+    'limit:i'    => \$limit,
+    'w|where:s'  => \@where,
+    'no-headers' => \$no_headers,
+    'help'       => \$help,
+    'man'        => \$man_page,
+    'version'    => \$show_version,
+) or pod2usage;
+
+if ( $help || $man_page ) {
+    pod2usage({
+        -exitval => 0,
+        -verbose => $man_page ? 2 : 1
+    });
+};
+
+if ( $show_version ) {
+    my $prog = basename( $PROGRAM_NAME );
+    print "$prog $VERSION\n";
+    exit 0;
+}
+
+my $file    = shift or pod2usage('No file');
+my $p       = Text::RecordParser->new(
+    field_separator  => $fs,
+    record_separator => $rs,
+);
+
+if ( $file eq '-' ) {
+    $p->fh( \*STDIN );
+}
+else {
+    $p->filename( $file );
+}
+
+my @fields;
+unless ( $no_headers ) {
+    $p->bind_header;
+    @fields = $p->field_list;
+}
+
+if ( $list ) {
+    pod2usage("Can't list fields with --no-headers") if $no_headers;
+    my $tab = Text::TabularDisplay->new('Field No.', 'Field');
+    my $i   = 1;
+    $tab->add( $i++, $_ ) for @fields;
+    print $tab->render, "\n";
+    exit(0);
+}
+
+my %where;
+for ( @where ) {
+    if ( /([\w\d]+)\s*(==|eq|>=?|<=?|=~)\s*(.*)/ ) {
+        my $field        = $1;
+        my $op           = $2;
+        my $value        = $3;
+        unless ( $no_headers ) {
+            my %available    = map { $_, 1 } @fields;
+            next unless $available{ $field };
+        }
+        $field-- if $field =~ /^\d+$/;
+        $where{ $field } = [ $op, $value ];
+    }
+}
+
+if ( $show_fields ) {
+    my @show    = map  { $_ =~ m/^\d+$/ && @fields 
+                         ? $_-1 < scalar @fields ? $_ : () : $_ }
+                  map  { $_ =~ m/(\d+)-(\d+)/ ? ( $1..$2 ) : $_ }
+                  split( /,/, $show_fields );
+    my @numbers = grep { /^(\d+)$/ } @show;
+
+    if ( $no_headers ) {
+        @fields = @show;
+    }
+    else {
+        if ( scalar @show == scalar @numbers ) { # all numbers
+            @numbers = map { $_ - 1 } @numbers;
+            @fields  = @fields[ @numbers ];
+        }
+        elsif ( @show ) {
+            my %available = map { $_, 1 } @fields;
+            my @temp      = @fields;
+            @fields       = map { $available{ $_ } ? $_ : () } @show;
+        }
+        die "No fields match in list '$show_fields'\n" unless @fields;
+    }
+}
+
+my $tab = Text::TabularDisplay->new( @fields );
+
+my $i;
+if ( $no_headers ) {
+    RECORD:
+    while ( my @data = $p->fetchrow_array ) {
+        unless ( @fields ) {
+            @fields = ( 0..$#data );
+            $tab->columns( map { "Field" . ($_+1) } @fields );
+        }
+
+        for my $field ( keys %where ) {
+            my ( $op, $value ) = @{ $where{ $field } };
+            my $cmd = "'$data[ ($field - 1) ]' $op $value";
+            next RECORD unless eval $cmd;
+        }
+
+        $tab->add( map { $data[ $_ ] } @fields );
+        $i++;
+        last if $limit && $i > $limit;
+    }
+}
+else {
+    RECORD:
+    while ( my $data = $p->fetchrow_hashref ) {
+        for my $field ( keys %where ) {
+            my ( $op, $value ) = @{ $where{ $field } };
+            my $cmd = "'$data->{ $field }' $op $value";
+            next RECORD unless eval $cmd;
+        }
+
+        $tab->add( map { $data->{ $_ } } @fields );
+        $i++;
+        last if $limit && $i > $limit;
+    }
+}
+
+my $fh;
+if ( my $pager = $ENV{'PAGER'} ) {
+    open $fh, "| $pager";
+}
+else {
+    $fh = \*STDOUT;
+}
+
+print $fh 
+    ( $i )
+    ? $tab->render . sprintf("\n$i record%s returned\n", $i > 1 ? 's' : '')
+    : "No records returned\n";
+
+close $fh;
+
+__END__
+
+# -------------------------------------------------------------------
+
+# $Id: tablify,v 1.8 2005/12/09 22:45:47 kclark Exp $
+
+=pod
 
 =head1 NAME
 
@@ -151,154 +319,6 @@ and then refer to fields by number (starting at one), e.g.:
   +--------+---------+--------+--------+--------+
   3 records returned
 
-=cut
-
-# -------------------------------------------------------------------
-
-use strict;
-use Getopt::Long;
-use Pod::Usage;
-use Text::TabularDisplay;
-use Text::RecordParser;
-
-my ( $fs, $rs, $show_fields, $list, $limit, $no_headers, @where, $help );
-GetOptions(
-    'h|help'     => \$help,
-    'fs:s'       => \$fs,
-    'rs:s'       => \$rs,
-    'f|fields:s' => \$show_fields,
-    'l|list'     => \$list,
-    'limit:i'    => \$limit,
-    'w|where:s'  => \@where,
-    'no-headers' => \$no_headers,
-) or pod2usage;
-pod2usage(2) if $help;
-
-$fs       ||= "\t";
-$rs       ||= "\n";
-$no_headers = 0 unless defined $no_headers;
-my $file    = shift or pod2usage('No file');
-my $p       = Text::RecordParser->new(
-    field_separator  => $fs,
-    record_separator => $rs,
-);
-
-if ( $file eq '-' ) {
-    $p->fh( \*STDIN );
-}
-else {
-    $p->filename( $file );
-}
-
-my @fields;
-unless ( $no_headers ) {
-    $p->bind_header;
-    @fields = $p->field_list;
-}
-
-if ( $list ) {
-    pod2usage("Can't list fields with --no-headers") if $no_headers;
-    my $tab = Text::TabularDisplay->new('Field No.', 'Field');
-    my $i   = 1;
-    $tab->add( $i++, $_ ) for @fields;
-    print $tab->render, "\n";
-    exit(0);
-}
-
-my %where;
-for ( @where ) {
-    if ( /([\w\d]+)\s*(==|eq|>=?|<=?|=~)\s*(.*)/ ) {
-        my $field        = $1;
-        my $op           = $2;
-        my $value        = $3;
-        unless ( $no_headers ) {
-            my %available    = map { $_, 1 } @fields;
-            next unless $available{ $field };
-        }
-        $field-- if $field =~ /^\d+$/;
-        $where{ $field } = [ $op, $value ];
-    }
-}
-
-if ( $show_fields ) {
-    my @show    = map  { $_ =~ m/^\d+$/ && @fields 
-                         ? $_-1 < scalar @fields ? $_ : () : $_ }
-                  map  { $_ =~ m/(\d+)-(\d+)/ ? ( $1..$2 ) : $_ }
-                  split( /,/, $show_fields );
-    my @numbers = grep { /^(\d+)$/ } @show;
-
-    if ( $no_headers ) {
-        @fields = @show;
-    }
-    else {
-        if ( scalar @show == scalar @numbers ) { # all numbers
-            @numbers = map { $_ - 1 } @numbers;
-            @fields  = @fields[ @numbers ];
-        }
-        elsif ( @show ) {
-            my %available = map { $_, 1 } @fields;
-            my @temp      = @fields;
-            @fields       = map { $available{ $_ } ? $_ : () } @show;
-        }
-        die "No fields match in list '$show_fields'\n" unless @fields;
-    }
-}
-
-my $tab = Text::TabularDisplay->new( @fields );
-
-my $i;
-if ( $no_headers ) {
-    RECORD:
-    while ( my @data = $p->fetchrow_array ) {
-        unless ( @fields ) {
-            @fields = ( 0..$#data );
-            $tab->columns( map { "Field" . ($_+1) } @fields );
-        }
-
-        for my $field ( keys %where ) {
-            my ( $op, $value ) = @{ $where{ $field } };
-            my $cmd = "'$data[ ($field - 1) ]' $op $value";
-            next RECORD unless eval $cmd;
-        }
-
-        $tab->add( map { $data[ $_ ] } @fields );
-        $i++;
-        last if $limit && $i > $limit;
-    }
-}
-else {
-    RECORD:
-    while ( my $data = $p->fetchrow_hashref ) {
-        for my $field ( keys %where ) {
-            my ( $op, $value ) = @{ $where{ $field } };
-            my $cmd = "'$data->{ $field }' $op $value";
-            next RECORD unless eval $cmd;
-        }
-
-        $tab->add( map { $data->{ $_ } } @fields );
-        $i++;
-        last if $limit && $i > $limit;
-    }
-}
-
-my $fh;
-if ( my $pager = $ENV{'PAGER'} ) {
-    open $fh, "| $pager";
-}
-else {
-    $fh = \*STDOUT;
-}
-
-print $fh 
-    ( $i )
-    ? $tab->render . sprintf("\n$i record%s returned\n", $i > 1 ? 's' : '')
-    : "No records returned\n";
-
-close $fh;
-
-# -------------------------------------------------------------------
-
-=pod
 
 =head1 SEE ALSO
 
@@ -316,9 +336,13 @@ get this kind of functionality.  I think my interface is simpler.
 
 =back
 
-=head1 COPYRIGHT
+=head1 AUTHOR
 
-Copyright (C) 2004 Ken Youens-Clark
+Ken Youens-Clark E<lt>kclark@cpan.orgE<gt>.
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (C) 2005 Ken Youens-Clark.  All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -328,9 +352,5 @@ This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of 
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 General Public License for more details.
-
-=head1 AUTHOR
-
-Ken Youens-Clark E<lt>kclark@cpan.orgE<gt>.
 
 =cut

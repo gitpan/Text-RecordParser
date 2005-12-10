@@ -1,24 +1,29 @@
-#!/usr/bin/perl
+#!perl
 
 #
 # tests for skipping records matching a comment regex
 #
 
 use strict;
+use File::Spec::Functions;
+use FindBin qw( $Bin );
+use Readonly;
+use Test::Exception;
 use Test::More tests => 5;
 use Text::RecordParser;
-use FindBin '$Bin';
+
+Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
 
 {
     my $p = Text::RecordParser->new; 
-    eval { $p->comment('foo') };
-    my $err = $@;
-    like( $err, qr/look like a regex/i, 'comment rejects not regex' );
+    throws_ok { $p->comment('foo') } qr/look like a regex/i, 
+        'comment rejects not regex';
 }
 
 {
+    my $file     = catfile( $TEST_DATA_DIR, 'commented.dat' );
     my $p        =  Text::RecordParser->new( 
-        filename => "$Bin/data/commented.dat",
+        filename => $file,
         comment  => qr/^#/,
     );
 
@@ -31,8 +36,9 @@ use FindBin '$Bin';
 }
 
 {
+    my $file     = catfile( $TEST_DATA_DIR, 'commented2.dat' );
     my $p        =  Text::RecordParser->new( 
-        filename => "$Bin/data/commented2.dat",
+        filename => $file,
         comment  => qr/^--/,
     );
 

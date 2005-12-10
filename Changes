@@ -1,3 +1,20 @@
+0.10    December 9 2005
+
+-   Fixed bug in "extract" that caused infinite loops when called in 
+    a loop context (Sharon Wei)
+-   Added convenience args to "new" ("fs" for "field_separator", 
+    "rs" for "record_separator")
+-   Added Text::RecordParser::Tab (convenience class for tab files)
+-   Added back in test for scripts as Text::TabularDisplay 1.21 fixes
+    earlier bug causing tests to fail
+-   Coverted to Module::Build
+-   Now with more test coverage!
+
+0.09    August 2 2005
+
+-   Just one arg to "new" means a filename
+-   Removed tests that break with bad version of Text::TabularDisplay
+
 0.08    November 16 2004
 
 -   Added "tabmerge" script

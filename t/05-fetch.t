@@ -1,18 +1,22 @@
-#!/usr/bin/perl
+#!perl
 
 #
 # tests for "extract" and "fetch*" methods
 #
 
 use strict;
-use Test::More tests => 23;
-use Text::RecordParser;
+use File::Spec::Functions;
 use FindBin '$Bin';
+use Readonly;
+use Test::Exception;
+use Test::More tests => 30;
+use Text::RecordParser;
+
+Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
 
 {
-    my $p = Text::RecordParser->new;
-
-    $p->filename("$Bin/data/simpsons.csv");
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.csv' );
+    my $p    = Text::RecordParser->new( $file );
     $p->bind_header;
 
     # Extract nothing
@@ -29,13 +33,48 @@ use FindBin '$Bin';
         'Address is "748 Evergreen Terrace"' 
     );
     is( $city, 'Springfield', 'City is "Springfield"' );
-
 }
 
 {
-    my $p = Text::RecordParser->new;
+    my $file = catfile( $TEST_DATA_DIR, 'empty' );
+    my $p    = Text::RecordParser->new( $file );
 
-    $p->filename("$Bin/data/simpsons.csv");
+    throws_ok { my $data = $p->extract( qw[ foo ] ) } qr/Can't find columns/, 
+        'extract dies without bound fields';
+
+    $p->bind_fields( qw[ foo bar baz ] );
+    my $data = $p->extract( qw[ foo ] );
+    is( $data, undef, 'extract returns undef on read of empty file' );
+}
+
+{
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.csv' );
+    my $p   = Text::RecordParser->new( $file );
+    $p->bind_header;
+
+    throws_ok { my $data = $p->extract('non-existent-field') }
+        qr/invalid field/i, 'extract dies on bad field request';
+}
+
+{
+    my $file = catfile( $TEST_DATA_DIR, 'bad-file' );
+    my $p = Text::RecordParser->new( $file );
+
+    throws_ok { my @row = $p->fetchrow_array } qr/Error reading line number/, 
+        'fetchrow_array dies reading invalid data';
+}
+
+{
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.csv' );
+    my $p    = Text::RecordParser->new( $file );
+    my $row  = $p->fetchrow_hashref;
+    is( $row->{'City'}, 'Springfield',
+        'fetchrow_hashref works without binding fields' );
+}
+
+{
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.csv' );
+    my $p    = Text::RecordParser->new( $file );
     $p->bind_header;
 
     my @row = $p->fetchrow_array;
@@ -52,9 +91,8 @@ use FindBin '$Bin';
 }
 
 {
-    my $p = Text::RecordParser->new;
-
-    $p->filename("$Bin/data/simpsons.csv");
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.csv' );
+    my $p    = Text::RecordParser->new( $file );
     $p->bind_header;
 
     my $data = $p->fetchall_arrayref;
@@ -65,9 +103,8 @@ use FindBin '$Bin';
 }
 
 {
-    my $p = Text::RecordParser->new;
-
-    $p->filename("$Bin/data/simpsons.csv");
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.csv');
+    my $p    = Text::RecordParser->new( $file );
     $p->bind_header;
 
     my $data = $p->fetchall_arrayref( { Columns => {} } );
@@ -79,9 +116,26 @@ use FindBin '$Bin';
 }
 
 {
-    my $p = Text::RecordParser->new;
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.csv' );
+    my $p    = Text::RecordParser->new( $file );
+    $p->bind_header;
 
-    $p->filename("$Bin/data/simpsons.csv");
+    my $data = $p->fetchall_arrayref('Bad');
+    is( scalar @$data, 2, 'fetchall_arrayref ignores bad param' );
+}
+
+{
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.csv');
+    my $p    = Text::RecordParser->new( $file );
+    $p->bind_header;
+
+    throws_ok { my $data = $p->fetchall_hashref('Bad Field') }
+        qr/Invalid key field/, 'fetchall_hashref dies on bad field';
+}
+
+{
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.csv' );
+    my $p = Text::RecordParser->new( $file );
     $p->bind_header;
 
     my $data = $p->fetchall_hashref('Name');
@@ -91,9 +145,8 @@ use FindBin '$Bin';
 }
 
 {
-    my $p = Text::RecordParser->new;
-
-    $p->filename("$Bin/data/simpsons.csv");
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.csv' );
+    my $p    = Text::RecordParser->new( $file );
     $p->bind_header;
 
     $p->field_compute( 
@@ -114,12 +167,12 @@ use FindBin '$Bin';
 }
 
 {
-    my $p = Text::RecordParser->new(
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.ssv' );
+    my $p    = Text::RecordParser->new(
         trim            => 1,
         field_separator => qr/\s+/,
-        filename        => "$Bin/data/simpsons.ssv",
+        filename        => $file,
     );
-
     $p->bind_header;
 
     my $row = $p->fetchrow_hashref;
@@ -128,12 +181,12 @@ use FindBin '$Bin';
 }
 
 {
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.pdd' );
     my $p = Text::RecordParser->new(
         trim            => 1,
         field_separator => '|',
-        filename        => "$Bin/data/simpsons.pdd",
+        filename        => $file,
     );
-
     $p->bind_header;
 
     my $row = $p->fetchrow_hashref;

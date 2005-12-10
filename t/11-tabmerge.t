@@ -1,29 +1,38 @@
-#!/usr/bin/perl
+#!perl
 
 use strict;
-use FindBin '$Bin';
+use Config;
+use File::Spec::Functions;
+use FindBin qw( $Bin );
+use Readonly;
 use Test::More tests => 10;
 
-my $tabmerge = "$Bin/../bin/tabmerge";
-ok( -e $tabmerge, "Script exists" );
+Readonly my $PERL          => $Config{'perlpath'};
+Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
+Readonly my $TABMERGE      => catfile( $Bin, '..', 'bin', 'tabmerge' );
+
+ok( -e $TABMERGE, 'Script exists' );
 
 SKIP: {
     eval { require Text::TabularDisplay };
 
-    skip 'Text::TabularDisplay not installed', 9 if $@;
-
-    skip 'Text::TabularDisplay problems', 9;
-
-    my @files = map { "$Bin/data/merge" . $_ . ".tab" } ( 1..3 );
-    for my $file ( @files ) {
-        ok( -e $file, "Data file '$file' exists" );
+    if ($@) {
+        skip 'Text::TabularDisplay not installed', 9;
     }
+
+#    skip 'Text::TabularDisplay problems', 9;
+
+    my @files = map { catfile($TEST_DATA_DIR, "merge${_}.tab") } (1..3);
+    for my $file ( @files ) {
+        ok( -e $file, 'Data file "$file" exists' );
+    }
+
     my $data = join( ' ', @files );
 
     my @tests = (
     {
         name     => 'List',
-        command  => "$tabmerge --list $data",
+        args     => "--list $data",
         expected => 
     '+-----------+-------------------+
     | Field     | No. Times Present |
@@ -37,7 +46,7 @@ SKIP: {
     },
     {
         name     => 'Merge min',
-        command  => "$tabmerge $data",
+        args     => "$data",
         expected => 
     '+----------+----------+
     | name     | position |
@@ -56,7 +65,7 @@ SKIP: {
     },
     {
         name     => 'Merge max',
-        command  => "$tabmerge --max $data",
+        args     => "--max $data",
         expected => 
     '+-----------+----------+----------+--------+
     | lod_score | name     | position | type   |
@@ -75,7 +84,7 @@ SKIP: {
     },
     {
         name     => 'Merge on named fields',
-        command  => "$tabmerge -f name,type $data", 
+        args     => "-f name,type $data", 
         expected => 
     '+----------+--------+
     | name     | type   |
@@ -94,7 +103,7 @@ SKIP: {
     },
     {
         name     => 'Merge on named fields and sort',
-        command  => "$tabmerge -f name,lod_score -s name $data",
+        args     => "-f name,lod_score -s name $data",
         expected => 
     '+----------+-----------+
     | name     | lod_score |
@@ -113,7 +122,7 @@ SKIP: {
     },
     {
         name     => 'Merge on named fields and sort, print stdout',
-        command  => "$tabmerge -f name,lod_score -s name --stdout $data",
+        args     => "-f name,lod_score -s name --stdout $data",
         expected => 
     'name	lod_score
     ALTX	
@@ -129,8 +138,10 @@ SKIP: {
     },
     );
 
+    my $command = "$PERL $TABMERGE ";
     for my $test ( @tests ) {
-        my $out = `$test->{'command'}`;
+        my $out = `$command $test->{'args'}`;
+        $test->{'expected'} =~ s/^\s+//xmsg;
         is( $out, $test->{'expected'}, $test->{'name'} || 'Parsing' );
     }
 };

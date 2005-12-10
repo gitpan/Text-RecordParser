@@ -1,29 +1,37 @@
-#!/usr/bin/perl
+#!perl
 
 use strict;
-use FindBin '$Bin';
+use Config;
+use FindBin qw( $Bin );
 use Test::More tests => 10;
+use Readonly;
+use File::Spec::Functions;
 
-my $tablify = "$Bin/../bin/tablify";
-ok( -e $tablify, "Script exists" );
+Readonly my $PERL          => $Config{'perlpath'};
+Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
+Readonly my $TABLIFY       => catfile( $Bin, '..', 'bin', 'tablify' );
+
+ok( -e $TABLIFY, 'Script exists' );
 
 SKIP: {
     eval { require Text::TabularDisplay };
 
-    skip 'Text::TabularDisplay not installed', 9 if $@;
+    if ($@) {
+        skip 'Text::TabularDisplay not installed', 9;
+    }
 
-    skip 'Text::TabularDisplay problems', 9;
+#    skip 'Text::TabularDisplay problems', 9;
 
-    my $data = "$Bin/data/people.dat";
-    ok( -e $data, "Data file exists" );
+    my $data = catfile( $TEST_DATA_DIR, 'people.dat' );
+    ok( -e $data, 'Data file exists' );
 
-    my $nh_data = "$Bin/data/people-no-header.dat";
-    ok( -e $nh_data, "Other data file exists" );
+    my $nh_data = catfile( $TEST_DATA_DIR, 'people-no-header.dat' );
+    ok( -e $nh_data, 'Other data file exists' );
 
     my @tests = (
     {
         name     => 'Field list',
-        command  => "$tablify --fs ',' -l $data",
+        args     => "--fs ',' -l $data",
         expected => 
     '+-----------+-----------+
     | Field No. | Field     |
@@ -38,7 +46,7 @@ SKIP: {
     },
     {
         name     => 'Select fields by name',
-        command  => "$tablify --fs ',' -f name,serial_no $data",
+        args     => "--fs ',' -f name,serial_no $data",
         expected => 
     '+--------+-----------+
     | name   | serial_no |
@@ -54,7 +62,7 @@ SKIP: {
     },
     {
         name     => 'Select fields by position',
-        command  => "$tablify --fs ',' -f 1-3,5 $data",
+        args     => "--fs ',' -f 1-3,5 $data",
         expected => 
     '+--------+---------+-----------+------+
     | name   | rank    | serial_no | age  |
@@ -70,7 +78,7 @@ SKIP: {
     },
     {
         name     => 'Filter with regex',
-        command  => "$tablify --fs ',' -w 'serial_no=~/^\\d{6}\$/' $data",
+        args     => "--fs ',' -w 'serial_no=~/^\\d{6}\$/' $data",
         expected => 
     '+--------+---------+-----------+-----------+------+
     | name   | rank    | serial_no | is_living | age  |
@@ -84,7 +92,7 @@ SKIP: {
     },
     {
         name     => 'Filter with Perl operator',
-        command  => "$tablify --fs ',' -w 'name eq \"Dwight\"' $data",
+        args     => "--fs ',' -w 'name eq \"Dwight\"' $data",
         expected => 
     '+--------+---------+-----------+-----------+------+
     | name   | rank    | serial_no | is_living | age  |
@@ -96,7 +104,7 @@ SKIP: {
     },
     {
         name     => 'Combine filter and field selection',
-        command  => "$tablify --fs ',' -f name -w 'is_living==1' ".
+        args     => "--fs ',' -f name -w 'is_living==1' ".
                     "-w 'serial_no>0' $data",
         expected => 
     '+-------+
@@ -109,22 +117,24 @@ SKIP: {
     },
     {
         name     => 'No headers plus filtering by position',
-        command  => "$tablify --fs ',' --no-headers -w '3 eq \"General\"' $nh_data",
+        args     => "--fs ',' --no-headers -w '3 eq \"General\"' $nh_data",
         expected => 
-    '+--------+---------+--------+--------+--------+
-    | Field1 | Field2  | Field3 | Field4 | Field5 |
-    +--------+---------+--------+--------+--------+
-    | George | General | 190293 | 0      | 64     |
-    | Dwight | General | 908348 | 0      | 75     |
-    | Tommy  | General | 998110 | 1      | 54     |
-    +--------+---------+--------+--------+--------+
-    3 records returned
-    '
+'+--------+---------+--------+--------+--------+
+| Field1 | Field2  | Field3 | Field4 | Field5 |
++--------+---------+--------+--------+--------+
+| George | General | 190293 | 0      | 64     |
+| Dwight | General | 908348 | 0      | 75     |
+| Tommy  | General | 998110 | 1      | 54     |
++--------+---------+--------+--------+--------+
+3 records returned
+'
     },
     );
 
+    my $command = "$PERL $TABLIFY ";
     for my $test ( @tests ) {
-        my $out = `$test->{'command'}`;
+        my $out = `$command $test->{'args'}`;
+        $test->{'expected'} =~ s/^\s*//xmsg;
         is( $out, $test->{'expected'}, $test->{'name'} || 'Parsing' );
     }
 };
