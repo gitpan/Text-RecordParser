@@ -354,6 +354,9 @@ CREDITS
     * Sharon Wei
         For catching bug in "extract" that sets up infinite loops
 
+    * Lars Thegler
+        For bug report on missing "script_files" arg in Build.PL
+
 BUGS
     None known. Please use http://rt.cpan.org/ for reporting bugs.
 

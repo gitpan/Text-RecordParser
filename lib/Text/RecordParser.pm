@@ -1,6 +1,6 @@
 package Text::RecordParser;
 
-# $Id: RecordParser.pm,v 1.1 2005/12/09 22:47:51 kclark Exp $
+# $Id: RecordParser.pm,v 1.2 2006/02/08 15:05:11 kclark Exp $
 
 =head1 NAME
 
@@ -87,7 +87,7 @@ use IO::Scalar;
 use Readonly;
 use Text::ParseWords qw( parse_line );
 
-our $VERSION = version->new('1.0.0');
+use version; our $VERSION = qv('1.0.1');
 
 Readonly my $COMMA     => ',';
 Readonly my $EMPTY_STR => q{};
@@ -1006,6 +1006,10 @@ For catching the column-ordering error when parsing with "no-headers"
 =item * Sharon Wei
 
 For catching bug in C<extract> that sets up infinite loops
+
+=item * Lars Thegler 
+
+For bug report on missing "script_files" arg in Build.PL
 
 =back
 

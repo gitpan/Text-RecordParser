@@ -11,6 +11,7 @@ my $build = Module::Build->new(
     create_readme      => 1,
     dist_abstract      => 'Parse record-oriented data in a text file',
     license            => 'gpl',
+    script_files       => ['bin/tablify', 'bin/tabmerge'],
     requires           => {
         'IO::Scalar'           => 0,
         'Readonly'             => 0,

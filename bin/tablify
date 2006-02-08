@@ -1,4 +1,4 @@
-#!perl
+#!/usr/bin/perl
 
 use strict;
 use warnings;
@@ -10,7 +10,7 @@ use Pod::Usage;
 use Text::RecordParser;
 use Text::TabularDisplay;
 
-our $VERSION = version->new(qw$Revision: 1.8 $);
+our $VERSION = version->new(qw$Revision: 1.9 $);
 
 my $fs         = "\t";
 my $rs         = "\n";
@@ -166,7 +166,7 @@ __END__
 
 # -------------------------------------------------------------------
 
-# $Id: tablify,v 1.8 2005/12/09 22:45:47 kclark Exp $
+# $Id: tablify,v 1.9 2006/02/08 15:08:34 kclark Exp $
 
 =pod
 
