@@ -1,4 +1,14 @@
-0.10    December 9 2005
+1.1.0   February 17 2006
+
+-   Automatically strip backslash-escaped single quotes (because quotes
+    *must* be escaped to parse)
+-   Added code to "tablify" to display records vertically
+
+1.0.1   February 8 2006
+
+-   Fixed a bug in Build.PL that failed to install scripts
+
+1.0.0   December 9 2005
 
 -   Fixed bug in "extract" that caused infinite loops when called in 
     a loop context (Sharon Wei)

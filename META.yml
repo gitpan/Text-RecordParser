@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name: Text-RecordParser
-version: v1.0.1
+version: v1.1.0
 author:
   - Ken Youens-Clark <kclark@cpan.org>
 abstract: Parse record-oriented data in a text file

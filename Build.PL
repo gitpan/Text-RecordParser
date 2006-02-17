@@ -15,6 +15,7 @@ my $build = Module::Build->new(
     requires           => {
         'IO::Scalar'           => 0,
         'Readonly'             => 0,
+        'List::Util'           => 0,
         'version'              => 0,
     },
     build_requires     => {

@@ -6,15 +6,18 @@ use version;
 use English qw( -no_match_vars );
 use File::Basename;
 use Getopt::Long;
+use List::Util qw( max );
 use Pod::Usage;
 use Text::RecordParser;
 use Text::TabularDisplay;
 
-our $VERSION = version->new(qw$Revision: 1.9 $);
+our $VERSION = version->new(qw$Revision: 1.11 $);
 
-my $fs         = "\t";
-my $rs         = "\n";
-my $no_headers = 0;
+my $fs              = "\t";
+my $rs              = "\n";
+my $no_headers      = 0;
+my $show_vertically = 0;
+my $no_pager        = 0;
 
 my ( $show_fields, $list, $limit, @where, $help, $man_page, $show_version );
 GetOptions(
@@ -24,7 +27,9 @@ GetOptions(
     'l|list'     => \$list,
     'limit:i'    => \$limit,
     'w|where:s'  => \@where,
+    'v|vertical' => \$show_vertically,
     'no-headers' => \$no_headers,
+    'no-pager'   => \$no_pager,
     'help'       => \$help,
     'man'        => \$man_page,
     'version'    => \$show_version,
@@ -110,15 +115,29 @@ if ( $show_fields ) {
     }
 }
 
+my $fh;
+my $pager = $ENV{'PAGER'};
+if ( !$no_pager && $pager ) {
+    open $fh, "| $pager";
+}
+else {
+    $fh = \*STDOUT;
+}
+
 my $tab = Text::TabularDisplay->new( @fields );
 
-my $i;
+my $max_col_length = 0;
+my $num_records    = 0;
+my $separator      = "************ Record %s ************\n";
 if ( $no_headers ) {
+    my @field_names;
     RECORD:
     while ( my @data = $p->fetchrow_array ) {
         unless ( @fields ) {
-            @fields = ( 0..$#data );
-            $tab->columns( map { "Field" . ($_+1) } @fields );
+            @fields      = ( 0..$#data );
+            @field_names = map { "Field" . ($_+1) } @fields;
+            $max_col_length = max( map { length $_ } @field_names );
+            $tab->columns( @field_names );
         }
 
         for my $field ( keys %where ) {
@@ -127,12 +146,24 @@ if ( $no_headers ) {
             next RECORD unless eval $cmd;
         }
 
-        $tab->add( map { $data[ $_ ] } @fields );
-        $i++;
-        last if $limit && $i > $limit;
+        $num_records++;
+        if ( $show_vertically ) {
+            printf $fh $separator, $num_records;
+            for my $field ( @fields ) {
+                printf $fh "%${max_col_length}s: %s\n", 
+                    $field_names[ $field ], $data[ $field ] || '';
+            }
+        }
+        else {
+            $tab->add( map { $data[ $_ ] } @fields );
+        }
+
+        last if $limit && $num_records > $limit;
     }
 }
 else {
+    $max_col_length = max map { length $_ } $p->field_list;
+
     RECORD:
     while ( my $data = $p->fetchrow_hashref ) {
         for my $field ( keys %where ) {
@@ -141,24 +172,30 @@ else {
             next RECORD unless eval $cmd;
         }
 
-        $tab->add( map { $data->{ $_ } } @fields );
-        $i++;
-        last if $limit && $i > $limit;
+        $num_records++;
+        if ( $show_vertically ) {
+            printf $fh $separator, $num_records;
+            for my $field ( @fields ) {
+                printf $fh "%${max_col_length}s: %s\n", 
+                    $field, $data->{ $field } || '';
+            }
+        }
+        else {
+            $tab->add( map { $data->{ $_ } } @fields );
+        }
+        last if $limit && $num_records > $limit;
     }
 }
 
-my $fh;
-if ( my $pager = $ENV{'PAGER'} ) {
-    open $fh, "| $pager";
-}
-else {
-    $fh = \*STDOUT;
+if ( !$show_vertically ) {
+    print $fh $tab->render;
 }
 
-print $fh 
-    ( $i )
-    ? $tab->render . sprintf("\n$i record%s returned\n", $i > 1 ? 's' : '')
-    : "No records returned\n";
+print $fh $num_records
+    ? sprintf(
+        "\n%s record%s returned\n", $num_records, $num_records > 1 ? 's' : ''
+    )
+    : "\nNo records returned\n";
 
 close $fh;
 
@@ -166,7 +203,7 @@ __END__
 
 # -------------------------------------------------------------------
 
-# $Id: tablify,v 1.9 2006/02/08 15:08:34 kclark Exp $
+# $Id: tablify,v 1.11 2006/02/17 16:51:28 kclark Exp $
 
 =pod
 
@@ -182,6 +219,7 @@ Options:
 
   -h|--help           Show help
   --no-headers        Assume first line is data, not headers
+  --no-pager          Do not use $ENV{'PAGER'} even if defined
   -l|--list           List the fields in the file (for use with -f)
   -f|--fields=f1[,f2] Show only fields in comma-separated list;
                       when used in conjunction with "no-headers"
@@ -190,6 +228,7 @@ Options:
   -w|where=f<cmp>v    Apply the "cmp" Perl operator to restrict output 
                       where field "f" matches the value "v";  acceptable
                       operators include ==, eq, >, >=, <=, and =~
+  -v|--vertical       Show records vertically
   --limit=n           Limit to first "n" records
   --fs=x              Use "x" as the field separator 
                       (default is tab "\t")
@@ -342,7 +381,7 @@ Ken Youens-Clark E<lt>kclark@cpan.orgE<gt>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2005 Ken Youens-Clark.  All rights reserved.
+Copyright (C) 2006 Ken Youens-Clark.  All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

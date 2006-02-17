@@ -24,7 +24,7 @@ __END__
 
 # ----------------------------------------------------------------
 
-# $Id: Tab.pm,v 1.1 2005/12/09 22:47:51 kclark Exp $
+# $Id: Tab.pm,v 1.2 2006/02/17 16:51:28 kclark Exp $
 
 =pod
 
@@ -61,7 +61,7 @@ Ken Youens-Clark E<lt>kclark@cpan.orgE<gt>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2005 Ken Youens-Clark.  All rights reserved.
+Copyright (C) 2006 Ken Youens-Clark.  All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

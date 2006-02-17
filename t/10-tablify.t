@@ -3,7 +3,7 @@
 use strict;
 use Config;
 use FindBin qw( $Bin );
-use Test::More tests => 10;
+use Test::More tests => 11;
 use Readonly;
 use File::Spec::Functions;
 
@@ -119,14 +119,53 @@ SKIP: {
         name     => 'No headers plus filtering by position',
         args     => "--fs ',' --no-headers -w '3 eq \"General\"' $nh_data",
         expected => 
-'+--------+---------+--------+--------+--------+
-| Field1 | Field2  | Field3 | Field4 | Field5 |
-+--------+---------+--------+--------+--------+
-| George | General | 190293 | 0      | 64     |
-| Dwight | General | 908348 | 0      | 75     |
-| Tommy  | General | 998110 | 1      | 54     |
-+--------+---------+--------+--------+--------+
-3 records returned
+        '+--------+---------+--------+--------+--------+
+        | Field1 | Field2  | Field3 | Field4 | Field5 |
+        +--------+---------+--------+--------+--------+
+        | George | General | 190293 | 0      | 64     |
+        | Dwight | General | 908348 | 0      | 75     |
+        | Tommy  | General | 998110 | 1      | 54     |
+        +--------+---------+--------+--------+--------+
+        3 records returned
+        '
+    },
+    {
+        name     => 'Vertical display',
+        args     => "--fs ',' -v $data",
+        no_strip => 1,
+        expected => 
+'************ Record 1 ************
+     name: George
+     rank: General
+serial_no: 190293
+is_living: 
+     age : 64
+************ Record 2 ************
+     name: Dwight
+     rank: General
+serial_no: 908348
+is_living: 
+     age : 75
+************ Record 3 ************
+     name: Attila
+     rank: Hun
+serial_no: 
+is_living: 
+     age : 56
+************ Record 4 ************
+     name: Tojo
+     rank: Emporor
+serial_no: 
+is_living: 
+     age : 87
+************ Record 5 ************
+     name: Tommy
+     rank: General
+serial_no: 998110
+is_living: 1
+     age : 54
+
+5 records returned
 '
     },
     );
@@ -134,7 +173,9 @@ SKIP: {
     my $command = "$PERL $TABLIFY ";
     for my $test ( @tests ) {
         my $out = `$command $test->{'args'}`;
-        $test->{'expected'} =~ s/^\s*//xmsg;
+        unless ( $test->{'no_strip'} ) {
+            $test->{'expected'} =~ s/^\s*//xmsg;
+        }
         is( $out, $test->{'expected'}, $test->{'name'} || 'Parsing' );
     }
 };

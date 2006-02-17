@@ -72,7 +72,7 @@ Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
     my $f2 = catfile($TEST_DATA_DIR, 'simpsons.tab');
     $p->filename( $f2 );
     ok( my @fields = $p->field_list, 'bind_header implicitly called' );
-    is( scalar @fields, 6, 'Found six fields' );
-    is( join(',', @fields), 'Name,Address,City,State,Wife,Children', 
+    is( scalar @fields, 7, 'Found seven fields' );
+    is( join(',', @fields), 'Name,Address,City,State,Wife,Children,Pets', 
         'Fields OK');
 }

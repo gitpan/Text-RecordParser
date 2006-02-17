@@ -9,8 +9,9 @@ use File::Spec::Functions;
 use FindBin '$Bin';
 use Readonly;
 use Test::Exception;
-use Test::More tests => 30;
+use Test::More tests => 31;
 use Text::RecordParser;
+use Text::RecordParser::Tab;
 
 Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
 
@@ -192,4 +193,13 @@ Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
     my $row = $p->fetchrow_hashref;
     is( $row->{'Address'}, '747 Evergreen Terrace', 
         'Address is "747 Evergreen Terrace"' );
+}
+
+{
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.tab' );
+    my $p    = Text::RecordParser::Tab->new( $file );
+
+    my $row = $p->fetchrow_hashref;
+    is( $row->{'Pets'}, q[Snowball(s),Santa's Little Helper], 
+        'Pets OK (apostrophe backslashed-unescaped)' );
 }
