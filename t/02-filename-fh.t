@@ -88,7 +88,7 @@ Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
     $p->filename( $filename );
     close $fh;
     unlink $filename;
-    throws_ok { my $data = $p->fh } qr/Cannot read '$filename'/, 
+    throws_ok { my $data = $p->fh } qr/Cannot read '\Q$filename\E'/, 
         'fh dies on bad file'; 
 }
 

@@ -11,7 +11,7 @@ use Pod::Usage;
 use Text::RecordParser;
 use Text::TabularDisplay;
 
-our $VERSION = version->new(qw$Revision: 1.11 $);
+our $VERSION = version->new(qw$Revision: 1.12 $);
 
 my $fs              = "\t";
 my $rs              = "\n";
@@ -158,7 +158,7 @@ if ( $no_headers ) {
             $tab->add( map { $data[ $_ ] } @fields );
         }
 
-        last if $limit && $num_records > $limit;
+        last if $limit && $num_records >= $limit;
     }
 }
 else {
@@ -183,7 +183,7 @@ else {
         else {
             $tab->add( map { $data->{ $_ } } @fields );
         }
-        last if $limit && $num_records > $limit;
+        last if $limit && $num_records >= $limit;
     }
 }
 
@@ -203,7 +203,7 @@ __END__
 
 # -------------------------------------------------------------------
 
-# $Id: tablify,v 1.11 2006/02/17 16:51:28 kclark Exp $
+# $Id: tablify,v 1.12 2006/02/21 14:45:12 kclark Exp $
 
 =pod
 

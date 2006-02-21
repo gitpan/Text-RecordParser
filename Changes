@@ -1,3 +1,10 @@
+1.1.1   February 21 2006
+
+-   Fixed RT bug #17787 submitted by Carl Franks on failed test on Win32
+-   Fixed RT bug #17788 submitted by Carl Franks on failed test when
+    prereq Text::TabularDisplay is not installed
+-   Fixed off-by-one bug in "--limit" option for "tablify", added test
+
 1.1.0   February 17 2006
 
 -   Automatically strip backslash-escaped single quotes (because quotes

@@ -2,7 +2,7 @@ NAME
     Text::RecordParser - read record-oriented files
 
 VERSION
-    This documentation refers to version 1.1.0.
+    This documentation refers to version 1.1.1.
 
 SYNOPSIS
       use Text::RecordParser;

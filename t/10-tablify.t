@@ -3,7 +3,7 @@
 use strict;
 use Config;
 use FindBin qw( $Bin );
-use Test::More tests => 11;
+use Test::More tests => 12;
 use Readonly;
 use File::Spec::Functions;
 
@@ -17,10 +17,8 @@ SKIP: {
     eval { require Text::TabularDisplay };
 
     if ($@) {
-        skip 'Text::TabularDisplay not installed', 9;
+        skip 'Text::TabularDisplay not installed', 11;
     }
-
-#    skip 'Text::TabularDisplay problems', 9;
 
     my $data = catfile( $TEST_DATA_DIR, 'people.dat' );
     ok( -e $data, 'Data file exists' );
@@ -58,6 +56,19 @@ SKIP: {
     | Tommy  | 998110    |
     +--------+-----------+
     5 records returned
+    '
+    },
+    {
+        name     => 'Limit',
+        args     => "--fs ',' --limit 2 -f name,serial_no $data",
+        expected => 
+    '+--------+-----------+
+    | name   | serial_no |
+    +--------+-----------+
+    | George | 190293    |
+    | Dwight | 908348    |
+    +--------+-----------+
+    2 records returned
     '
     },
     {

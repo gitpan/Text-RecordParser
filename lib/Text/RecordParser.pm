@@ -1,6 +1,6 @@
 package Text::RecordParser;
 
-# $Id: RecordParser.pm,v 1.7 2006/02/17 16:49:41 kclark Exp $
+# $Id: RecordParser.pm,v 1.8 2006/02/21 14:51:51 kclark Exp $
 
 =head1 NAME
 
@@ -8,7 +8,7 @@ Text::RecordParser - read record-oriented files
 
 =head1 VERSION
 
-This documentation refers to version 1.1.0.
+This documentation refers to version 1.1.1.
 
 =head1 SYNOPSIS
 
@@ -87,7 +87,7 @@ use IO::Scalar;
 use Readonly;
 use Text::ParseWords qw( parse_line );
 
-use version; our $VERSION = qv('1.1.0');
+use version; our $VERSION = qv('1.1.1');
 
 Readonly my $COMMA     => ',';
 Readonly my $EMPTY_STR => q{};
