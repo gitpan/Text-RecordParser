@@ -3,7 +3,7 @@
 use strict;
 use Config;
 use FindBin qw( $Bin );
-use Test::More tests => 12;
+use Test::More tests => 13;
 use Readonly;
 use File::Spec::Functions;
 
@@ -149,25 +149,25 @@ SKIP: {
      name: George
      rank: General
 serial_no: 190293
-is_living: 
+is_living: 0
      age : 64
 ************ Record 2 ************
      name: Dwight
      rank: General
 serial_no: 908348
-is_living: 
+is_living: 0
      age : 75
 ************ Record 3 ************
      name: Attila
      rank: Hun
 serial_no: 
-is_living: 
+is_living: 0
      age : 56
 ************ Record 4 ************
      name: Tojo
      rank: Emporor
 serial_no: 
-is_living: 
+is_living: 0
      age : 87
 ************ Record 5 ************
      name: Tommy
@@ -177,6 +177,21 @@ is_living: 1
      age : 54
 
 5 records returned
+'
+    },
+    {
+        name     => 'No headers, vertical display',
+        args     => "--fs ',' --no-headers -v --limit 1 $nh_data",
+        no_strip => 1,
+        expected => 
+'************ Record 1 ************
+Field1: George
+Field2: General
+Field3: 190293
+Field4: 0
+Field5: 64
+
+1 record returned
 '
     },
     );

@@ -10,7 +10,7 @@ use Pod::Usage;
 use Text::RecordParser;
 use Text::TabularDisplay;
 
-our $VERSION = version->new(qw$Revision: 1.9 $);
+our $VERSION = version->new(qw$Revision: 1.10 $);
 
 my $fs = "\t";
 my $rs = "\n";
@@ -184,7 +184,7 @@ __END__
 
 # -------------------------------------------------------------------
 
-# $Id: tabmerge,v 1.9 2006/02/17 16:51:28 kclark Exp $
+# $Id: tabmerge,v 1.10 2006/03/06 15:56:27 kclark Exp $
 
 =pod
 
@@ -195,8 +195,6 @@ tabmerge - unify delimited files on common fields
 =head1 SYNOPSIS
 
   tabmerge [action] [options] file1 file2 [...]
-
-=head1 OPTIONS
 
 Actions:
 

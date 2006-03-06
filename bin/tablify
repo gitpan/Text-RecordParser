@@ -11,7 +11,7 @@ use Pod::Usage;
 use Text::RecordParser;
 use Text::TabularDisplay;
 
-our $VERSION = version->new(qw$Revision: 1.12 $);
+our $VERSION = version->new(qw$Revision: 1.13 $);
 
 my $fs              = "\t";
 my $rs              = "\n";
@@ -68,24 +68,26 @@ unless ( $no_headers ) {
 }
 
 if ( $list ) {
-    pod2usage("Can't list fields with --no-headers") if $no_headers;
+    pod2usage(q[Can't list fields with --no-headers]) if $no_headers;
     my $tab = Text::TabularDisplay->new('Field No.', 'Field');
     my $i   = 1;
     $tab->add( $i++, $_ ) for @fields;
     print $tab->render, "\n";
-    exit(0);
+    exit 0;
 }
 
 my %where;
 for ( @where ) {
     if ( /([\w\d]+)\s*(==|eq|>=?|<=?|=~)\s*(.*)/ ) {
-        my $field        = $1;
-        my $op           = $2;
-        my $value        = $3;
+        my $field = $1;
+        my $op    = $2;
+        my $value = $3;
+
         unless ( $no_headers ) {
-            my %available    = map { $_, 1 } @fields;
+            my %available = map { $_, 1 } @fields;
             next unless $available{ $field };
         }
+
         $field-- if $field =~ /^\d+$/;
         $where{ $field } = [ $op, $value ];
     }
@@ -111,7 +113,10 @@ if ( $show_fields ) {
             my @temp      = @fields;
             @fields       = map { $available{ $_ } ? $_ : () } @show;
         }
-        die "No fields match in list '$show_fields'\n" unless @fields;
+
+        if ( !@fields ) {
+            die "No fields match in list '$show_fields'\n";
+        }
     }
 }
 
@@ -135,7 +140,7 @@ if ( $no_headers ) {
     while ( my @data = $p->fetchrow_array ) {
         unless ( @fields ) {
             @fields      = ( 0..$#data );
-            @field_names = map { "Field" . ($_+1) } @fields;
+            @field_names = map { 'Field' . ($_+1) } @fields;
             $max_col_length = max( map { length $_ } @field_names );
             $tab->columns( @field_names );
         }
@@ -149,9 +154,10 @@ if ( $no_headers ) {
         $num_records++;
         if ( $show_vertically ) {
             printf $fh $separator, $num_records;
-            for my $field ( @fields ) {
+            for my $i ( @fields ) {
                 printf $fh "%${max_col_length}s: %s\n", 
-                    $field_names[ $field ], $data[ $field ] || '';
+                    $field_names[ $i ], 
+                    defined $data[ $i ] ? $data[ $i ] : q{};
             }
         }
         else {
@@ -177,7 +183,8 @@ else {
             printf $fh $separator, $num_records;
             for my $field ( @fields ) {
                 printf $fh "%${max_col_length}s: %s\n", 
-                    $field, $data->{ $field } || '';
+                    $field, 
+                    defined $data->{ $field } ? $data->{ $field } : q{};
             }
         }
         else {
@@ -203,7 +210,7 @@ __END__
 
 # -------------------------------------------------------------------
 
-# $Id: tablify,v 1.12 2006/02/21 14:45:12 kclark Exp $
+# $Id: tablify,v 1.13 2006/03/06 15:55:51 kclark Exp $
 
 =pod
 
@@ -358,6 +365,18 @@ and then refer to fields by number (starting at one), e.g.:
   +--------+---------+--------+--------+--------+
   3 records returned
 
+If your file has many fields which are hard to see across the screen, 
+consider using the vertical display with "-v" or "--vertical", e.g.:
+
+  $ tablify --fs ',' -v --limit 1 people.dat
+  ************ Record 1 ************
+       name: George
+       rank: General
+  serial_no: 190293
+  is_living: 0
+       age : 64
+  
+  1 record returned
 
 =head1 SEE ALSO
 
