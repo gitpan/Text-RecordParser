@@ -72,10 +72,10 @@ require_ok( 'Text::RecordParser::Tab' );
 # New with shortened arguments
 #
 {
-    my $p  = Text::RecordParser->new(
+    my $p  = Text::RecordParser->new({
         fs => "\t",
         rs => "\n\n",
-    );
+    });
 
     is( $p->field_separator, "\t", 'Shortened field separator arg OK' );
     is( $p->record_separator, "\n\n", 'Shortened record separator arg OK' );

@@ -8,13 +8,19 @@ use File::Basename;
 use Getopt::Long;
 use List::Util qw( max );
 use Pod::Usage;
+use Readonly;
 use Text::RecordParser;
 use Text::TabularDisplay;
 
-our $VERSION = version->new(qw$Revision: 1.13 $);
+our $VERSION = version->new(qw$Revision: 1.14 $);
 
-my $fs              = "\t";
-my $rs              = "\n";
+Readonly my $DASH      => q{-};
+Readonly my $EMPTY_STR => q{};
+Readonly my $TAB       => qq{\t};
+Readonly my $NEWLINE   => qq{\n};
+
+my $fs              = $TAB;
+my $rs              = $NEWLINE;
 my $no_headers      = 0;
 my $show_vertically = 0;
 my $no_pager        = 0;
@@ -48,13 +54,13 @@ if ( $show_version ) {
     exit 0;
 }
 
-my $file    = shift or pod2usage('No file');
-my $p       = Text::RecordParser->new(
+my $file = shift or pod2usage('No file');
+my $p    = Text::RecordParser->new(
     field_separator  => $fs,
     record_separator => $rs,
 );
 
-if ( $file eq '-' ) {
+if ( $file eq $DASH ) {
     $p->fh( \*STDIN );
 }
 else {
@@ -72,7 +78,7 @@ if ( $list ) {
     my $tab = Text::TabularDisplay->new('Field No.', 'Field');
     my $i   = 1;
     $tab->add( $i++, $_ ) for @fields;
-    print $tab->render, "\n";
+    print $tab->render, $NEWLINE;
     exit 0;
 }
 
@@ -97,7 +103,7 @@ if ( $show_fields ) {
     my @show    = map  { $_ =~ m/^\d+$/ && @fields 
                          ? $_-1 < scalar @fields ? $_ : () : $_ }
                   map  { $_ =~ m/(\d+)-(\d+)/ ? ( $1..$2 ) : $_ }
-                  split( /,/, $show_fields );
+                  split /,/, $show_fields;
     my @numbers = grep { /^(\d+)$/ } @show;
 
     if ( $no_headers ) {
@@ -138,7 +144,7 @@ if ( $no_headers ) {
     my @field_names;
     RECORD:
     while ( my @data = $p->fetchrow_array ) {
-        unless ( @fields ) {
+        if ( !@fields ) {
             @fields      = ( 0..$#data );
             @field_names = map { 'Field' . ($_+1) } @fields;
             $max_col_length = max( map { length $_ } @field_names );
@@ -200,7 +206,8 @@ if ( !$show_vertically ) {
 
 print $fh $num_records
     ? sprintf(
-        "\n%s record%s returned\n", $num_records, $num_records > 1 ? 's' : ''
+        "\n%s record%s returned\n", $num_records, $num_records > 1 
+        ? 's' : $EMPTY_STR 
     )
     : "\nNo records returned\n";
 
@@ -210,7 +217,7 @@ __END__
 
 # -------------------------------------------------------------------
 
-# $Id: tablify,v 1.13 2006/03/06 15:55:51 kclark Exp $
+# $Id: tablify,v 1.14 2006/03/07 17:20:00 kclark Exp $
 
 =pod
 

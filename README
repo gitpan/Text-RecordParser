@@ -2,7 +2,7 @@ NAME
     Text::RecordParser - read record-oriented files
 
 VERSION
-    This documentation refers to version 1.1.2.
+    This documentation refers to version 1.2.1.
 
 SYNOPSIS
       use Text::RecordParser;
@@ -11,10 +11,10 @@ SYNOPSIS
       my $p = Text::RecordParser->new( $file );
 
       # or be explicit
-      my $p = Text::RecordParser->new(
+      my $p = Text::RecordParser->new({
           filename        => $file,
           field_separator => "\t",
-      );
+      });
 
       $p->filename('foo.csv');
 
@@ -42,9 +42,18 @@ SYNOPSIS
       # Return all the fields from the next row
       my @fields = $p->fetchrow_array;
 
+      # Define a field alias
+      $p->set_field_alias( name => 'handle' );
+
       # Return all the fields from the next row as a hashref
       my $record = $p->fetchrow_hashref;
       print $record->{'name'};
+      # or
+      print $record->{'handle'};
+
+      # Return the record as an object with fields as accessors
+      my $object = $p->fetchrow_object;
+      print $object->name; # or $object->handle;
 
       # Get all data as arrayref of arrayrefs
       my $data = $p->fetchall_arrayref;
@@ -173,6 +182,22 @@ METHODS
     "bind_header". If you do not bind fields prior to calling this method,
     the "bind_header" method will be implicitly called for you.
 
+  fetchrow_object
+      while ( my $object = $p->fetchrow_object ) {
+          my $id   = $object->id;
+          my $name = $object->naem; # <-- this will throw a runtime error
+      }
+
+    This will return the next data record as a Text::RecordParser::Object
+    object that has read-only accessor methods of the field names and any
+    aliases. This allows you to enforce field names, further helping ensure
+    that your code is reading the input file correctly. That is, if you are
+    using the "fetchrow_hashref" method to read each line, you may misspell
+    the hash key and introduce a bug in your code. With this method, Perl
+    will throw an error if you attempt to read a field not defined in the
+    file's headers. Additionally, any defined field aliases will be created
+    as additional accessor methods.
+
   fetchall_arrayref
       my $records = $p->fetchall_arrayref;
       for my $record ( @$records ) {
@@ -298,6 +323,13 @@ METHODS
     already opened, then the handle on it will be closed and a new one
     opened on the new file.
 
+  get_field_aliases
+      my @aliases = $p->get_field_aliases('name');
+
+    Allows you to define alternate names for fields, e.g., sometimes your
+    input file calls city "town" or "township," sometimes a file uses
+    "Moniker" instead of "name."
+
   header_filter
       $p->header_filter( sub { $_ = shift; s/\s+/_/g; lc $_ } );
 
@@ -324,6 +356,16 @@ METHODS
       data2
       data3
       //
+
+  set_field_alias
+      $p->set_field_alias({
+          name => 'Moniker,handle',        # comma-separated string
+          city => [ qw( town township ) ], # or anonymous arrayref
+      });
+
+    Allows you to define alternate names for fields, e.g., sometimes your
+    input file calls city "town" or "township," sometimes a file uses
+    "Moniker" instead of "name."
 
   trim
       my $trim_value = $p->trim(1);

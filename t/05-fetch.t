@@ -9,7 +9,7 @@ use File::Spec::Functions;
 use FindBin '$Bin';
 use Readonly;
 use Test::Exception;
-use Test::More tests => 31;
+use Test::More tests => 35;
 use Text::RecordParser;
 use Text::RecordParser::Tab;
 
@@ -89,6 +89,30 @@ Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
     is( $row->{'Name'}, '"Flanders, Ned"', 'Name is "Flanders, Ned"' );
     is( $row->{'City'}, 'Springfield', 'City is "Springfield"' );
     is( $row->{'State'}, '', 'State is empty' );
+}
+
+{
+    my $file = catfile( $TEST_DATA_DIR, 'simpsons.csv' );
+    my $p    = Text::RecordParser->new( $file );
+    $p->set_field_alias({
+        Moniker => 'Name,Name',
+        City    => [ qw( town township ) ],
+    });
+
+    my @aliases = $p->get_field_aliases('City');
+
+    is(join(',', @aliases), 'town,township', 'City => town,township');
+
+    my $row = $p->fetchrow_hashref;
+
+    is( $row->{'Moniker'}, '"Simpson, Homer"',
+        'Moniker alias for Name' );
+
+    is( $row->{'town'}, 'Springfield',
+        'town alias for city' );
+
+    is( $row->{'township'}, 'Springfield',
+        'township alias for city' );
 }
 
 {

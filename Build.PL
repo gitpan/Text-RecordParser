@@ -12,17 +12,19 @@ my $build = Module::Build->new(
     dist_abstract      => 'Parse record-oriented data in a text file',
     license            => 'gpl',
     script_files       => ['bin/tablify', 'bin/tabmerge'],
-    requires           => {
+    requires                   => {
         'IO::Scalar'           => 0,
+        'Class::Accessor'      => 0,
         'Readonly'             => 0,
         'List::Util'           => 0,
+        'List::MoreUtils'      => 0,
         'version'              => 0,
     },
-    build_requires     => {
+    build_requires             => {
         'Test::More'           => 0,
         'Test::Exception'      => 0,
     },
-    recommends         => {
+    recommends                 => {
         'Readonly::XS'         => 0,
         'Text::TabularDisplay' => '1.21',
     },

@@ -3,13 +3,16 @@
 use strict;
 use Config;
 use FindBin qw( $Bin );
-use Test::More tests => 13;
 use Readonly;
+use Test::More;
 use File::Spec::Functions;
 
+Readonly my $TEST_COUNT    => 13;
 Readonly my $PERL          => $Config{'perlpath'};
 Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
 Readonly my $TABLIFY       => catfile( $Bin, '..', 'bin', 'tablify' );
+
+plan tests => $TEST_COUNT;
 
 ok( -e $TABLIFY, 'Script exists' );
 
@@ -17,7 +20,7 @@ SKIP: {
     eval { require Text::TabularDisplay };
 
     if ($@) {
-        skip 'Text::TabularDisplay not installed', 11;
+        skip 'Text::TabularDisplay not installed', $TEST_COUNT - 1;
     }
 
     my $data = catfile( $TEST_DATA_DIR, 'people.dat' );

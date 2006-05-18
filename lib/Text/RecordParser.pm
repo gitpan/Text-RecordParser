@@ -1,6 +1,6 @@
 package Text::RecordParser;
 
-# $Id: RecordParser.pm,v 1.9 2006/03/06 15:54:57 kclark Exp $
+# $Id: RecordParser.pm,v 1.12 2006/05/18 18:53:41 kclark Exp $
 
 =head1 NAME
 
@@ -8,7 +8,7 @@ Text::RecordParser - read record-oriented files
 
 =head1 VERSION
 
-This documentation refers to version 1.1.2.
+This documentation refers to version 1.2.1.
 
 =head1 SYNOPSIS
 
@@ -18,10 +18,10 @@ This documentation refers to version 1.1.2.
   my $p = Text::RecordParser->new( $file );
 
   # or be explicit
-  my $p = Text::RecordParser->new(
+  my $p = Text::RecordParser->new({
       filename        => $file,
       field_separator => "\t",
-  );
+  });
 
   $p->filename('foo.csv');
 
@@ -49,9 +49,18 @@ This documentation refers to version 1.1.2.
   # Return all the fields from the next row
   my @fields = $p->fetchrow_array;
 
+  # Define a field alias
+  $p->set_field_alias( name => 'handle' );
+
   # Return all the fields from the next row as a hashref
   my $record = $p->fetchrow_hashref;
   print $record->{'name'};
+  # or
+  print $record->{'handle'};
+
+  # Return the record as an object with fields as accessors
+  my $object = $p->fetchrow_object;
+  print $object->name; # or $object->handle;
 
   # Get all data as arrayref of arrayrefs
   my $data = $p->fetchall_arrayref;
@@ -84,15 +93,16 @@ use warnings;
 use version;
 use Carp qw( croak );
 use IO::Scalar;
+use List::MoreUtils qw( uniq );
 use Readonly;
 use Text::ParseWords qw( parse_line );
 
-use version; our $VERSION = qv('1.1.2');
+our $VERSION = version->new('1.2.1');
 
-Readonly my $COMMA     => ',';
+Readonly my $COMMA     => q{,};
 Readonly my $EMPTY_STR => q{};
-Readonly my $NEW_LINE  => "\n";
-Readonly my $PIPE      => '|';
+Readonly my $NEW_LINE  => qq{\n};
+Readonly my $PIPE      => q{|};
 
 # ----------------------------------------------------------------
 sub new {
@@ -441,7 +451,7 @@ of the fields.
 
     my $separator = $self->field_separator;
     $separator eq $PIPE and $separator = '\|';
-    my @fields    = map { $_ =~ s/\\'/'/g; $_ } (
+    my @fields    = map { defined $_ && $_ =~ s/\\'/'/g; $_ } (
         ( ref $separator eq 'Regexp' )
         ? parse_line( $separator, 0, $line )
         : parse_line( $separator, 1, $line )
@@ -492,6 +502,9 @@ the C<bind_header> method will be implicitly called for you.
     my %return;
     for my $field ( @fields ) {
         $return{ $field } = $row[ $i++ ];
+        if ( my @aliases = $self->get_field_aliases( $field ) ) {
+            $return{ $_ } = $return{ $field } for @aliases;
+        }
     }
 
     while ( my ( $position, $callback ) = each %{ $self->field_compute } ) {
@@ -499,6 +512,39 @@ the C<bind_header> method will be implicitly called for you.
     }
 
     return \%return;
+}
+
+# ----------------------------------------------------------------
+sub fetchrow_object {
+
+=pod
+
+=head2 fetchrow_object
+
+  while ( my $object = $p->fetchrow_object ) {
+      my $id   = $object->id;
+      my $name = $object->naem; # <-- this will throw a runtime error
+  }
+
+This will return the next data record as a Text::RecordParser::Object
+object that has read-only accessor methods of the field names and any
+aliases.  This allows you to enforce field names, further helping
+ensure that your code is reading the input file correctly.  That is,
+if you are using the "fetchrow_hashref" method to read each line, you
+may misspell the hash key and introduce a bug in your code.  With this
+method, Perl will throw an error if you attempt to read a field not
+defined in the file's headers.  Additionally, any defined field
+aliases will be created as additional accessor methods.
+
+=cut
+
+    my $self   = shift;
+    my $row    = $self->fetchrow_hashref;
+    my @fields = $self->field_list or return;
+
+    push @fields, map { $self->get_field_aliases( $_ ) } @fields;
+
+    return Text::RecordParser::Object->new( \@fields, $row );
 }
 
 # ----------------------------------------------------------------
@@ -867,6 +913,31 @@ opened on the new file.
 }
 
 # ----------------------------------------------------------------
+sub get_field_aliases {
+
+=pod
+
+=head2 get_field_aliases
+
+  my @aliases = $p->get_field_aliases('name');
+
+Allows you to define alternate names for fields, e.g., sometimes your
+input file calls city "town" or "township," sometimes a file uses "Moniker"
+instead of "name."
+
+=cut
+
+    my $self       = shift;
+    my $field_name = shift or return;
+
+    if ( !$self->{'field_alias'} ) {
+        return;
+    }
+
+    return @{ $self->{'field_alias'}{ $field_name } || [] };
+}
+
+# ----------------------------------------------------------------
 sub header_filter {
 
 =pod
@@ -943,6 +1014,48 @@ The above example would read a file that looks like this:
     }
 
     return $self->{'record_separator'} || $NEW_LINE;
+}
+
+# ----------------------------------------------------------------
+sub set_field_alias {
+
+=pod
+
+=head2 set_field_alias
+
+  $p->set_field_alias({
+      name => 'Moniker,handle',        # comma-separated string
+      city => [ qw( town township ) ], # or anonymous arrayref
+  });
+
+Allows you to define alternate names for fields, e.g., sometimes your
+input file calls city "town" or "township," sometimes a file uses "Moniker"
+instead of "name."
+
+=cut
+
+    my $self     = shift;
+    my %args     = ref $_[0] eq 'HASH' ? %{ $_[0] } : @_;
+    my %is_field = map { $_, 1 } $self->field_list;
+
+    ARG:
+    while ( my ( $field_name, $aliases ) = each %args ) {
+        if ( ref $aliases ne 'ARRAY' ) {
+            $aliases = [ split(/,/, $aliases) ];
+        }
+
+        if ( !$is_field{ $field_name } ) {
+            push @$aliases, $field_name;
+            ( $field_name ) = grep { $is_field{ $_ } } @$aliases;
+            next ARG unless $field_name;
+        }
+
+        $self->{'field_alias'}{ $field_name } = [ 
+            grep { $_ ne $field_name } uniq( @$aliases ) 
+        ];
+    }
+
+    return 1;
 }
 
 # ----------------------------------------------------------------
