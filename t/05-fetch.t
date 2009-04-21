@@ -61,8 +61,8 @@ Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
     my $file = catfile( $TEST_DATA_DIR, 'bad-file' );
     my $p = Text::RecordParser->new( $file );
 
-    throws_ok { my @row = $p->fetchrow_array } qr/Error reading line number/, 
-        'fetchrow_array dies reading invalid data';
+    lives_ok { my @row = $p->fetchrow_array } 
+        'fetchrow_array does not die reading unescaped quote';
 }
 
 {

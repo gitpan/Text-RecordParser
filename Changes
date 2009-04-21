@@ -1,4 +1,15 @@
-1.1.2   March 6 2006
+1.3.0   April 20, 2009
+
+-   Guess record separator based on file extension
+-   Automatically escape single quotes in incoming text for parse_line 
+    (resolves RT #34844)
+-   Added "strip-quotes" to tablify (related to RT #40664)
+-   Now more conservative on trimming whitespace from individual 
+    fields rather than the whole line (resolves RT #38871)
+-   Added Text::RecordParser::Object (resolves RT #38338)
+-   Added tab2graph
+
+1.2.1   March 6 2006
 
 -   Fixed bug in "tablify" that didn't checked definedness of value 
     when printing vertically, added tests and documentation on 

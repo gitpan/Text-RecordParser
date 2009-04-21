@@ -1,9 +1,11 @@
+bin/tab2graph
 bin/tablify
 bin/tabmerge
 Build.PL
 Changes
 INSTALL
 lib/Text/RecordParser.pm
+lib/Text/RecordParser/Object.pm
 lib/Text/RecordParser/Tab.pm
 Makefile.PL
 MANIFEST			This list of files
@@ -21,6 +23,9 @@ t/08-compute.t
 t/09-comment.t
 t/10-tablify.t
 t/11-tabmerge.t
+t/12-object.t
+t/13-tab2graph.t
+t/14-trim.t
 t/data/bad-file
 t/data/commented.dat
 t/data/commented2.dat
@@ -37,6 +42,8 @@ t/data/simpsons.csv
 t/data/simpsons.pdd
 t/data/simpsons.ssv
 t/data/simpsons.tab
+t/data/tabular.tab
+t/data/trim.csv
 t/pod-coverage.t
 t/pod.t
 TODO

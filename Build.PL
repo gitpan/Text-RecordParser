@@ -11,7 +11,7 @@ my $build = Module::Build->new(
     create_readme      => 1,
     dist_abstract      => 'Parse record-oriented data in a text file',
     license            => 'gpl',
-    script_files       => ['bin/tablify', 'bin/tabmerge'],
+    script_files       => ['bin/tablify', 'bin/tabmerge', 'bin/tab2graph'],
     requires                   => {
         'IO::Scalar'           => 0,
         'Class::Accessor'      => 0,
@@ -26,7 +26,8 @@ my $build = Module::Build->new(
     },
     recommends                 => {
         'Readonly::XS'         => 0,
-        'Text::TabularDisplay' => '1.21',
+        'Text::TabularDisplay' => '1.22',
+        'GraphViz'             => 0,
     },
 );
   

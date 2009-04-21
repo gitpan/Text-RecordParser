@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
@@ -12,8 +12,7 @@ use Readonly;
 use Text::RecordParser;
 use Text::TabularDisplay;
 
-our $VERSION = version->new(qw$Revision: 1.14 $);
-
+Readonly our $VERSION  => 1.15;
 Readonly my $DASH      => q{-};
 Readonly my $EMPTY_STR => q{};
 Readonly my $TAB       => qq{\t};
@@ -24,21 +23,23 @@ my $rs              = $NEWLINE;
 my $no_headers      = 0;
 my $show_vertically = 0;
 my $no_pager        = 0;
+my $strip_quotes    = 0;
 
 my ( $show_fields, $list, $limit, @where, $help, $man_page, $show_version );
 GetOptions(
-    'fs:s'       => \$fs,
-    'rs:s'       => \$rs,
-    'f|fields:s' => \$show_fields,
-    'l|list'     => \$list,
-    'limit:i'    => \$limit,
-    'w|where:s'  => \@where,
-    'v|vertical' => \$show_vertically,
-    'no-headers' => \$no_headers,
-    'no-pager'   => \$no_pager,
-    'help'       => \$help,
-    'man'        => \$man_page,
-    'version'    => \$show_version,
+    'fs:s'         => \$fs,
+    'rs:s'         => \$rs,
+    'f|fields:s'   => \$show_fields,
+    'l|list'       => \$list,
+    'limit:i'      => \$limit,
+    'w|where:s'    => \@where,
+    'v|vertical'   => \$show_vertically,
+    'strip-quotes' => \$strip_quotes,
+    'no-headers'   => \$no_headers,
+    'no-pager'     => \$no_pager,
+    'help'         => \$help,
+    'man'          => \$man_page,
+    'version'      => \$show_version,
 ) or pod2usage;
 
 if ( $help || $man_page ) {
@@ -59,6 +60,10 @@ my $p    = Text::RecordParser->new(
     field_separator  => $fs,
     record_separator => $rs,
 );
+
+if ( $strip_quotes ) {
+    $p->field_filter( sub { s/^["']//; s/["']$//; $_ } );
+}
 
 if ( $file eq $DASH ) {
     $p->fh( \*STDIN );
@@ -188,6 +193,7 @@ else {
         if ( $show_vertically ) {
             printf $fh $separator, $num_records;
             for my $field ( @fields ) {
+                next unless $field;
                 printf $fh "%${max_col_length}s: %s\n", 
                     $field, 
                     defined $data->{ $field } ? $data->{ $field } : q{};
@@ -234,6 +240,7 @@ Options:
   -h|--help           Show help
   --no-headers        Assume first line is data, not headers
   --no-pager          Do not use $ENV{'PAGER'} even if defined
+  --strip-quotes      Strip " or ' around fields
   -l|--list           List the fields in the file (for use with -f)
   -f|--fields=f1[,f2] Show only fields in comma-separated list;
                       when used in conjunction with "no-headers"
@@ -407,7 +414,7 @@ Ken Youens-Clark E<lt>kclark@cpan.orgE<gt>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2006 Ken Youens-Clark.  All rights reserved.
+Copyright (C) 2006-9 Ken Youens-Clark.  All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

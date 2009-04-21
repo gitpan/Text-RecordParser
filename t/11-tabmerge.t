@@ -20,8 +20,6 @@ SKIP: {
         skip 'Text::TabularDisplay not installed', 9;
     }
 
-#    skip 'Text::TabularDisplay problems', 9;
-
     my @files = map { catfile($TEST_DATA_DIR, "merge${_}.tab") } (1..3);
     for my $file ( @files ) {
         ok( -e $file, 'Data file "$file" exists' );

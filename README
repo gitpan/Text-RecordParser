@@ -2,7 +2,7 @@ NAME
     Text::RecordParser - read record-oriented files
 
 VERSION
-    This documentation refers to version 1.2.1.
+    This documentation refers to version 1.3.0.
 
 SYNOPSIS
       use Text::RecordParser;
@@ -82,34 +82,43 @@ METHODS
     arguments. Each argument can also be set through the method of the same
     name.
 
-    * filename
+    *   filename
+
         The path to the file being read. If the filename is passed and the
         fh is not, then it will open a filehandle on that file and sets "fh"
         accordingly.
 
-    * comment
+    *   comment
+
         A compiled regular expression identifying comment lines that should
         be skipped.
 
-    * data
+    *   data
+
         The data to read.
 
-    * fh
+    *   fh
+
         The filehandle of the file to read.
 
-    * field_separator | fs
+    *   field_separator | fs
+
         The field separator (default is comma).
 
-    * record_separator | rs
+    *   record_separator | rs
+
         The record separator (default is newline).
 
-    * field_filter
+    *   field_filter
+
         A callback applied to all the fields as they are read.
 
-    * header_filter
+    *   header_filter
+
         A callback applied to the column names.
 
-    * trim
+    *   trim
+
         Boolean to enable trimming of leading and trailing whitespace from
         fields (useful if splitting on whitespace only).
 
@@ -313,8 +322,10 @@ METHODS
       $p->field_separator(qr/\s+/);  # splits fields on whitespace
       my $sep = $p->field_separator; # returns the current separator
 
-    Gets and sets the token to use as the field delimiter. The default is a
-    comma. Regular expressions can be specified using qr//.
+    Gets and sets the token to use as the field delimiter. Regular
+    expressions can be specified using qr//. If not specified, it will take
+    a guess based on the filename extension ("comma" for ".txt," ".dat," or
+    ".csv"; "tab" for ".tab"). The default is a comma.
 
   filename
       $p->filename('/path/to/file.dat');
@@ -379,31 +390,37 @@ AUTHOR
 CREDITS
     Thanks to the following:
 
-    * Benjamin Tilly
+    *   Benjamin Tilly
+
         For Text::xSV, the inspirado for this module
 
-    * Tim Bunce et al.
+    *   Tim Bunce et al.
+
         For DBI, from which many of the methods were shamelessly stolen
 
-    * Tom Aldcroft
+    *   Tom Aldcroft
+
         For contributing code to make it easy to parse whitespace-delimited
         data
 
-    * Liya Ren
+    *   Liya Ren
+
         For catching the column-ordering error when parsing with
         "no-headers"
 
-    * Sharon Wei
+    *   Sharon Wei
+
         For catching bug in "extract" that sets up infinite loops
 
-    * Lars Thegler
+    *   Lars Thegler
+
         For bug report on missing "script_files" arg in Build.PL
 
 BUGS
     None known. Please use http://rt.cpan.org/ for reporting bugs.
 
 LICENSE AND COPYRIGHT
-    Copyright (C) 2006 Ken Youens-Clark. All rights reserved.
+    Copyright (C) 2006-9 Ken Youens-Clark. All rights reserved.
 
     This program is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by the

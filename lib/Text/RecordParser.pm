@@ -8,7 +8,7 @@ Text::RecordParser - read record-oriented files
 
 =head1 VERSION
 
-This documentation refers to version 1.2.1.
+This documentation refers to version 1.3.0.
 
 =head1 SYNOPSIS
 
@@ -97,7 +97,7 @@ use List::MoreUtils qw( uniq );
 use Readonly;
 use Text::ParseWords qw( parse_line );
 
-our $VERSION = version->new('1.2.1');
+our $VERSION = version->new('1.3.0');
 
 Readonly my $COMMA     => q{,};
 Readonly my $EMPTY_STR => q{};
@@ -445,7 +445,7 @@ of the fields.
         defined( $line = <$fh> ) or return;
         chomp $line;
         next if $comment and $line =~ $comment;
-        $line =~ s/^\s+|\s+$//g if $self->trim; 
+        $line =~ s/(?<!\\)'/\\'/g;
         last if $line;
     }
 
@@ -466,7 +466,7 @@ of the fields.
     }
 
     if ( $self->trim ) {
-        @fields = map { s/^\s+|\s+$//g; $_ } @fields;
+        @fields = map { defined $_ && s/^\s+|\s+$//g; $_ } @fields;
     }
 
     while ( my ( $position, $callback ) = each %{ $self->field_compute } ) {
@@ -854,8 +854,10 @@ sub field_separator {
   $p->field_separator(qr/\s+/);  # splits fields on whitespace
   my $sep = $p->field_separator; # returns the current separator
 
-Gets and sets the token to use as the field delimiter.  The default is 
-a comma.  Regular expressions can be specified using qr//.
+Gets and sets the token to use as the field delimiter.  Regular
+expressions can be specified using qr//.  If not specified, it will
+take a guess based on the filename extension ("comma" for ".txt," 
+".dat," or ".csv"; "tab" for ".tab").  The default is a comma.  
 
 =cut
 
@@ -863,6 +865,22 @@ a comma.  Regular expressions can be specified using qr//.
 
     if ( @_ ) {
         $self->{'field_separator'} = shift;
+    }
+
+    if ( !$self->{'field_separator'} ) {
+        my $guess;
+        if ( my $filename = $self->filename ) {
+            if ( $filename =~ /\.(csv|txt|dat)$/ ) {
+                $guess = q{,};
+            }
+            elsif ( $filename =~ /\.tab$/ ) {
+                $guess = qq{\t};
+            }
+        }
+
+        if ( $guess ) {
+            $self->{'field_separator'} = $guess;
+        }
     }
 
     return $self->{'field_separator'} || $COMMA;
@@ -1133,7 +1151,7 @@ None known.  Please use http://rt.cpan.org/ for reporting bugs.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2006 Ken Youens-Clark.  All rights reserved.
+Copyright (C) 2006-9 Ken Youens-Clark.  All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

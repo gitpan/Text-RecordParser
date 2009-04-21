@@ -17,7 +17,7 @@ Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
 {
     my $p = Text::RecordParser->new; 
     throws_ok { $p->comment('foo') } qr/look like a regex/i, 
-        'comment rejects not regex';
+        '"comment" rejects non-regex argument';
 }
 
 {
