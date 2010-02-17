@@ -9,9 +9,10 @@ use File::Spec::Functions;
 use FindBin '$Bin';
 use Readonly;
 use Test::Exception;
-use Test::More tests => 35;
+use Test::More tests => 38;
 use Text::RecordParser;
 use Text::RecordParser::Tab;
+use Text::RecordParser::Object;
 
 Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
 
@@ -227,3 +228,18 @@ Readonly my $TEST_DATA_DIR => catdir( $Bin, 'data' );
     is( $row->{'Pets'}, q[Snowball(s),Santa's Little Helper], 
         'Pets OK (apostrophe backslashed-unescaped)' );
 }
+
+{
+    my $p  = Text::RecordParser->new( { fh => \*DATA } );
+    my $o1 = $p->fetchrow_object;
+    is( $o1->name, 'moose', 'moose OK' );
+    my $o2 = $p->fetchrow_object;
+    is( $o2->name, 'poodle', 'poodle OK' );
+    my $o3 = $p->fetchrow_object;
+    is( $o3, undef, 'No problem reading off the end' );
+}
+
+__DATA__
+name,id
+moose,1
+poodle,2

@@ -6,7 +6,7 @@ use version;
 
 use base qw( Class::Accessor );
 
-our $VERSION = version->new('1.3.0');
+our $VERSION = version->new('1.4.0');
 
 sub new {
     my ( $class, $field_names, $self ) = @_;
@@ -20,8 +20,6 @@ sub new {
 __END__
 
 # ----------------------------------------------------------------
-
-# $Id: Object.pm,v 1.2 2006/03/07 17:20:00 kclark Exp $
 
 =pod
 

@@ -6,7 +6,7 @@ use version;
 
 use base qw( Text::RecordParser );
 
-our $VERSION = version->new('1.3.0');
+our $VERSION = version->new('1.4.0');
 
 # ----------------------------------------------------------------
 sub new {
@@ -23,8 +23,6 @@ sub new {
 __END__
 
 # ----------------------------------------------------------------
-
-# $Id: Tab.pm,v 1.2 2006/02/17 16:51:28 kclark Exp $
 
 =pod
 

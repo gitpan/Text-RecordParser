@@ -1,14 +1,12 @@
 package Text::RecordParser;
 
-# $Id: RecordParser.pm,v 1.12 2006/05/18 18:53:41 kclark Exp $
-
 =head1 NAME
 
 Text::RecordParser - read record-oriented files
 
 =head1 VERSION
 
-This documentation refers to version 1.3.0.
+This documentation refers to version 1.4.0.
 
 =head1 SYNOPSIS
 
@@ -97,7 +95,7 @@ use List::MoreUtils qw( uniq );
 use Readonly;
 use Text::ParseWords qw( parse_line );
 
-our $VERSION = version->new('1.3.0');
+our $VERSION = version->new('1.4.0');
 
 Readonly my $COMMA     => q{,};
 Readonly my $EMPTY_STR => q{};
@@ -495,7 +493,7 @@ the C<bind_header> method will be implicitly called for you.
 =cut
 
     my $self   = shift;
-    my @fields = $self->field_list or return;
+    my @fields = $self->field_list     or return;
     my @row    = $self->fetchrow_array or return;
 
     my $i = 0;
@@ -539,8 +537,8 @@ aliases will be created as additional accessor methods.
 =cut
 
     my $self   = shift;
-    my $row    = $self->fetchrow_hashref;
-    my @fields = $self->field_list or return;
+    my $row    = $self->fetchrow_hashref or return;
+    my @fields = $self->field_list       or return;
 
     push @fields, map { $self->get_field_aliases( $_ ) } @fields;
 
