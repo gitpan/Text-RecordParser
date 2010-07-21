@@ -1,12 +1,32 @@
 ---
-name: Text-RecordParser
-version: 1.4.0
+abstract: 'Parse record-oriented data in a text file'
 author:
   - 'Ken Youens-Clark <kclark@cpan.org>'
-abstract: Parse record-oriented data in a text file
+build_requires:
+  Test::Exception: 0
+  Test::More: 0
+configure_requires:
+  Module::Build: 0.36
+generated_by: 'Module::Build version 0.3607'
 license: gpl
-resources:
-  license: ~
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Text-RecordParser
+provides:
+  Text::RecordParser:
+    file: lib/Text/RecordParser.pm
+    version: v1.5.0
+  Text::RecordParser::Object:
+    file: lib/Text/RecordParser/Object.pm
+    version: v1.4.0
+  Text::RecordParser::Tab:
+    file: lib/Text/RecordParser/Tab.pm
+    version: v1.4.0
+recommends:
+  GraphViz: 0
+  Readonly::XS: 0
+  Text::TabularDisplay: 1.22
 requires:
   Class::Accessor: 0
   IO::Scalar: 0
@@ -14,24 +34,6 @@ requires:
   List::Util: 0
   Readonly: 0
   version: 0
-build_requires:
-  Test::Exception: 0
-  Test::More: 0
-recommends:
-  GraphViz: 0
-  Readonly::XS: 0
-  Text::TabularDisplay: 1.22
-provides:
-  Text::RecordParser:
-    file: lib/Text/RecordParser.pm
-    version: 1.4.0
-  Text::RecordParser::Object:
-    file: lib/Text/RecordParser/Object.pm
-    version: 1.4.0
-  Text::RecordParser::Tab:
-    file: lib/Text/RecordParser/Tab.pm
-    version: 1.4.0
-generated_by: Module::Build version 0.32
-meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.2.html
-  version: 1.2
+resources:
+  license: http://opensource.org/licenses/gpl-license.php
+version: v1.5.0

@@ -1,4 +1,12 @@
-1.3.0   April 20, 2009
+1.5.0   July 21 2010
+
+-   Some small changeds to be more defensive about non-existent fields
+
+1.4.0   February 18 2010
+
+-   Not sure, but I made a release here
+
+1.3.0   April 20 2009
 
 -   Guess record separator based on file extension
 -   Automatically escape single quotes in incoming text for parse_line 

@@ -59,7 +59,7 @@ Ken Youens-Clark E<lt>kclark@cpan.orgE<gt>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2006-9 Ken Youens-Clark.  All rights reserved.
+Copyright (C) 2006-10 Ken Youens-Clark.  All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

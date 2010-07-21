@@ -4,10 +4,6 @@ package Text::RecordParser;
 
 Text::RecordParser - read record-oriented files
 
-=head1 VERSION
-
-This documentation refers to version 1.4.0.
-
 =head1 SYNOPSIS
 
   use Text::RecordParser;
@@ -95,7 +91,7 @@ use List::MoreUtils qw( uniq );
 use Readonly;
 use Text::ParseWords qw( parse_line );
 
-our $VERSION = version->new('1.4.0');
+our $VERSION = version->new('1.5.0');
 
 Readonly my $COMMA     => q{,};
 Readonly my $EMPTY_STR => q{};
@@ -242,8 +238,9 @@ Pass in an empty array reference to unset:
         $self->{'field_pos_ordered'} = [ @fields ];
 
         my %field_pos;
-        foreach my $i ( 0 .. $#fields ) {
-            $field_pos{ $fields[$i] } = $i;
+        for my $i ( 0 .. $#fields ) {
+            next unless $fields[ $i ];
+            $field_pos{ $fields[ $i ] } = $i;
         }
 
         $self->{'field_pos'}    = \%field_pos;
@@ -499,6 +496,7 @@ the C<bind_header> method will be implicitly called for you.
     my $i = 0;
     my %return;
     for my $field ( @fields ) {
+        next unless defined $row[ $i ];
         $return{ $field } = $row[ $i++ ];
         if ( my @aliases = $self->get_field_aliases( $field ) ) {
             $return{ $_ } = $return{ $field } for @aliases;
@@ -1149,7 +1147,7 @@ None known.  Please use http://rt.cpan.org/ for reporting bugs.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2006-9 Ken Youens-Clark.  All rights reserved.
+Copyright (C) 2006-10 Ken Youens-Clark.  All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

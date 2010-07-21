@@ -179,7 +179,7 @@ if ( $no_headers ) {
     }
 }
 else {
-    $max_col_length = max map { length $_ } $p->field_list;
+    $max_col_length = max map { $_ ? length $_ : 0 } $p->field_list;
 
     RECORD:
     while ( my $data = $p->fetchrow_hashref ) {
@@ -414,7 +414,7 @@ Ken Youens-Clark E<lt>kclark@cpan.orgE<gt>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2006-9 Ken Youens-Clark.  All rights reserved.
+Copyright (C) 2006-10 Ken Youens-Clark.  All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -7,7 +7,6 @@ my $build = Module::Build->new(
     dist_author        => 'Ken Youens-Clark <kclark@cpan.org>',
     dist_version_from  => 'lib/Text/RecordParser.pm',
     add_to_cleanup     => [ '$(DISTNAME)-$(VERSION).tar.gz' ],
-    create_makefile_pl => 'passthrough',
     create_readme      => 1,
     dist_abstract      => 'Parse record-oriented data in a text file',
     license            => 'gpl',
