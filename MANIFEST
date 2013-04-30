@@ -10,7 +10,6 @@ lib/Text/RecordParser/Object.pm
 lib/Text/RecordParser/Tab.pm
 Makefile.PL
 MANIFEST			This list of files
-META.yml
 README
 t/00-pipe.t
 t/01-new.t
@@ -48,3 +47,5 @@ t/data/trim.csv
 t/pod-coverage.t
 t/pod.t
 TODO
+META.yml
+META.json

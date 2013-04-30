@@ -91,7 +91,7 @@ use List::MoreUtils qw( uniq );
 use Readonly;
 use Text::ParseWords qw( parse_line );
 
-our $VERSION = version->new('1.5.0');
+our $VERSION = version->new('1.6.0');
 
 Readonly my $COMMA     => q{,};
 Readonly my $EMPTY_STR => q{};
@@ -270,6 +270,7 @@ opening the file in order to bind the field names in the first row.
 =cut
 
     my $self = shift;
+$DB::single = 1;
 
     if ( my @columns = $self->fetchrow_array ) {
         if ( my $filter = $self->header_filter ) {

@@ -18,8 +18,10 @@ Readonly my $EMPTY_STR => q{};
 Readonly my $TAB       => qq{\t};
 Readonly my $NEWLINE   => qq{\n};
 
+my $comment_start   = '';
 my $fs              = $TAB;
 my $rs              = $NEWLINE;
+my $headers         = '';
 my $no_headers      = 0;
 my $show_vertically = 0;
 my $no_pager        = 0;
@@ -27,15 +29,17 @@ my $strip_quotes    = 0;
 
 my ( $show_fields, $list, $limit, @where, $help, $man_page, $show_version );
 GetOptions(
+    'c|comment:s'  => \$comment_start,
     'fs:s'         => \$fs,
     'rs:s'         => \$rs,
     'f|fields:s'   => \$show_fields,
     'l|list'       => \$list,
-    'limit:i'      => \$limit,
+    'i|limit:i'    => \$limit,
     'w|where:s'    => \@where,
     'v|vertical'   => \$show_vertically,
     'strip-quotes' => \$strip_quotes,
-    'no-headers'   => \$no_headers,
+    'n|no-headers' => \$no_headers,
+    'h|headers:s'  => \$headers,
     'no-pager'     => \$no_pager,
     'help'         => \$help,
     'man'          => \$man_page,
@@ -59,6 +63,7 @@ my $file = shift or pod2usage('No file');
 my $p    = Text::RecordParser->new(
     field_separator  => $fs,
     record_separator => $rs,
+    comment          => $comment_start ? qr/^$comment_start/ : undef,
 );
 
 if ( $strip_quotes ) {
@@ -73,7 +78,10 @@ else {
 }
 
 my @fields;
-unless ( $no_headers ) {
+if ( @fields = split( /\s*,\s*/, $headers ) ) {
+    $p->bind_fields( @fields );
+}
+elsif ( !$no_headers ) {
     $p->bind_header;
     @fields = $p->field_list;
 }
@@ -238,7 +246,8 @@ tablify - turn a delimited text file into a text table
 Options:
 
   -h|--help           Show help
-  --no-headers        Assume first line is data, not headers
+  -c|--comment        Define the beginning of a (single-line) comment 
+  -n|--no-headers     Assume first line is data, not headers
   --no-pager          Do not use $ENV{'PAGER'} even if defined
   --strip-quotes      Strip " or ' around fields
   -l|--list           List the fields in the file (for use with -f)
@@ -250,12 +259,14 @@ Options:
                       where field "f" matches the value "v";  acceptable
                       operators include ==, eq, >, >=, <=, and =~
   -v|--vertical       Show records vertically
-  --limit=n           Limit to first "n" records
+  -i|--limit=n        Limit to given number of records
   --fs=x              Use "x" as the field separator 
                       (default is tab "\t")
   --rs=x              Use "x" as the record separator 
                       (default is newline "\n")
   --as-html           Create an HTML table instead of plain text
+  --headers           Comma-separated list of names matching 
+                      the number of columns
 
 =head1 DESCRIPTION
 

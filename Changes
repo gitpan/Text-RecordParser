@@ -1,3 +1,11 @@
+1.6.0   April 30 2013
+
+-   Moved to Git repo at github.com:kyclark/text-recordparser.git
+-   Changes to "tablify"
+    - Allow for comment lines 
+    - Added more single-letter argument names
+    - Allow for definition of column names
+
 1.5.0   July 21 2010
 
 -   Some small changeds to be more defensive about non-existent fields
