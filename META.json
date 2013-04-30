@@ -44,7 +44,7 @@
    "provides" : {
       "Text::RecordParser" : {
          "file" : "lib/Text/RecordParser.pm",
-         "version" : "v1.6.0"
+         "version" : "v1.6.1"
       },
       "Text::RecordParser::Object" : {
          "file" : "lib/Text/RecordParser/Object.pm",
@@ -61,5 +61,5 @@
          "http://opensource.org/licenses/gpl-license.php"
       ]
    },
-   "version" : "v1.6.0"
+   "version" : "v1.6.1"
 }

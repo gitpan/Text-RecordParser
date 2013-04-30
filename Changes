@@ -1,3 +1,8 @@
+1.6.1   April 30 2013
+
+-   Removed a debug statement
+-   Fixed INSTALL
+
 1.6.0   April 30 2013
 
 -   Moved to Git repo at github.com:kyclark/text-recordparser.git

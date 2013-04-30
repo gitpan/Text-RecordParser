@@ -1,5 +1,4 @@
-perl Makefile.PL;
-make;
-make test;
-su;
-make install;
+$ perl Build.PL
+$ ./Build test
+$ su
+# ./Build install
