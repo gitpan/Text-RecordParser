@@ -91,7 +91,7 @@ use List::MoreUtils qw( uniq );
 use Readonly;
 use Text::ParseWords qw( parse_line );
 
-our $VERSION = version->new('1.6.1');
+our $VERSION = version->new('1.6.2');
 
 Readonly my $COMMA     => q{,};
 Readonly my $EMPTY_STR => q{};
@@ -1108,6 +1108,10 @@ fields.  Use a "false" argument to disable.
 =head1 AUTHOR
 
 Ken Youens-Clark E<lt>kclark@cpan.orgE<gt>
+
+=head1 SOURCE
+
+http://github.com/kyclark/text-recordparser
 
 =head1 CREDITS
 

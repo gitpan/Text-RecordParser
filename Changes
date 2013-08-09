@@ -1,3 +1,7 @@
+1.6.2   August 9 2012
+
+-   Made output of "tablify -v" prettier using Text::Autoformat
+
 1.6.1   April 30 2013
 
 -   Removed a debug statement

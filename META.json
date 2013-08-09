@@ -4,7 +4,7 @@
       "Ken Youens-Clark <kclark@cpan.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.112150",
+   "generated_by" : "Module::Build version 0.4005, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "open_source"
    ],
@@ -16,35 +16,39 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "Test::Exception" : 0,
-            "Test::More" : 0
+            "Test::Exception" : "0",
+            "Test::More" : "0"
          }
       },
       "configure" : {
          "requires" : {
-            "Module::Build" : "0.40"
+            "Module::Build" : "0.4",
+            "Pod::Markdown" : "0",
+            "Pod::Readme" : "0",
+            "Pod::Select" : "0"
          }
       },
       "runtime" : {
          "recommends" : {
-            "GraphViz" : 0,
-            "Readonly::XS" : 0,
+            "GraphViz" : "0",
+            "Readonly::XS" : "0",
             "Text::TabularDisplay" : "1.22"
          },
          "requires" : {
-            "Class::Accessor" : 0,
-            "IO::Scalar" : 0,
-            "List::MoreUtils" : 0,
-            "List::Util" : 0,
-            "Readonly" : 0,
-            "version" : 0
+            "Class::Accessor" : "0",
+            "IO::Scalar" : "0",
+            "List::MoreUtils" : "0",
+            "List::Util" : "0",
+            "Readonly" : "0",
+            "Text::Autoformat" : "0",
+            "version" : "0"
          }
       }
    },
    "provides" : {
       "Text::RecordParser" : {
          "file" : "lib/Text/RecordParser.pm",
-         "version" : "v1.6.1"
+         "version" : "v1.6.2"
       },
       "Text::RecordParser::Object" : {
          "file" : "lib/Text/RecordParser/Object.pm",
@@ -61,5 +65,5 @@
          "http://opensource.org/licenses/gpl-license.php"
       ]
    },
-   "version" : "v1.6.1"
+   "version" : "v1.6.2"
 }

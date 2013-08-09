@@ -1,4 +1,4 @@
 $ perl Build.PL
+$ sudo cpanm --installdeps .
 $ ./Build test
-$ su
-# ./Build install
+$ sudo ./Build install

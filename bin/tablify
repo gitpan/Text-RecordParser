@@ -3,12 +3,12 @@
 use strict;
 use warnings;
 use version;
-use English qw( -no_match_vars );
 use File::Basename;
 use Getopt::Long;
-use List::Util qw( max );
+use List::Util 'max';
 use Pod::Usage;
 use Readonly;
+use Text::Autoformat 'autoformat';
 use Text::RecordParser;
 use Text::TabularDisplay;
 
@@ -17,6 +17,7 @@ Readonly my $DASH      => q{-};
 Readonly my $EMPTY_STR => q{};
 Readonly my $TAB       => qq{\t};
 Readonly my $NEWLINE   => qq{\n};
+Readonly my $WIDTH     => 78;
 
 my $comment_start   = '';
 my $fs              = $TAB;
@@ -54,7 +55,7 @@ if ( $help || $man_page ) {
 };
 
 if ( $show_version ) {
-    my $prog = basename( $PROGRAM_NAME );
+    my $prog = basename( $0 );
     print "$prog $VERSION\n";
     exit 0;
 }
@@ -158,8 +159,8 @@ if ( $no_headers ) {
     RECORD:
     while ( my @data = $p->fetchrow_array ) {
         if ( !@fields ) {
-            @fields      = ( 0..$#data );
-            @field_names = map { 'Field' . ($_+1) } @fields;
+            @fields         = ( 0..$#data );
+            @field_names    = map { 'Field' . ($_+1) } @fields;
             $max_col_length = max( map { length $_ } @field_names );
             $tab->columns( @field_names );
         }
@@ -202,9 +203,13 @@ else {
             printf $fh $separator, $num_records;
             for my $field ( @fields ) {
                 next unless $field;
-                printf $fh "%${max_col_length}s: %s\n", 
-                    $field, 
-                    defined $data->{ $field } ? $data->{ $field } : q{};
+                my $v = defined $data->{ $field } ? $data->{ $field } : q{};
+                if ( length $v > $WIDTH ) {
+                    ( $v = autoformat( $v, { left => $max_col_length + 3 } ) )
+                        =~ s/^\s+|\s+$//g;
+                }
+
+                printf $fh "%${max_col_length}s: %s\n", $field, $v;
             }
         }
         else {
