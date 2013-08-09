@@ -3,6 +3,9 @@ abstract: 'Parse record-oriented data in a text file'
 author:
   - 'Ken Youens-Clark <kclark@cpan.org>'
 build_requires:
+  Pod::Markdown: 0
+  Pod::Readme: 0
+  Pod::Select: 0
   Test::Exception: 0
   Test::More: 0
 configure_requires:
@@ -11,7 +14,7 @@ configure_requires:
   Pod::Readme: 0
   Pod::Select: 0
 dynamic_config: 1
-generated_by: 'Module::Build version 0.4005, CPAN::Meta::Converter version 2.120921'
+generated_by: 'Module::Build version 0.4007, CPAN::Meta::Converter version 2.120921'
 license: open_source
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -20,7 +23,7 @@ name: Text-RecordParser
 provides:
   Text::RecordParser:
     file: lib/Text/RecordParser.pm
-    version: v1.6.2
+    version: v1.6.3
   Text::RecordParser::Object:
     file: lib/Text/RecordParser/Object.pm
     version: v1.4.0
@@ -41,4 +44,4 @@ requires:
   version: 0
 resources:
   license: http://opensource.org/licenses/gpl-license.php
-version: v1.6.2
+version: v1.6.3

@@ -1,3 +1,7 @@
+1.6.3   August 9 2012
+
+-   Fixed bug in "Build.PL" regarding "podselect," updated Build.PL reqs
+
 1.6.2   August 9 2012
 
 -   Made output of "tablify -v" prettier using Text::Autoformat
